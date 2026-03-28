@@ -133,6 +133,48 @@ function toggleStatus(element, alunoId, calId) {
   element.innerText = newStatus;
 
   recalcularTotaisLocais();
+
+  // NOVO GATILHO WHATSAPP: Se marcar falta 'F', sugere envio
+  if (newStatus === 'F') {
+    exibirSugestaoAlerta(alunoObj);
+  }
+}
+
+function exibirSugestaoAlerta(aluno) {
+  const toast = document.getElementById('waToast');
+  const btn = document.getElementById('btnEnviarWA');
+  const msg = document.getElementById('waToastMsg');
+  
+  // Nome reduzido para LGPD (Ex: João Silva -> João S.)
+  const partesNome = aluno.nome.split(' ');
+  const nomeReduzido = partesNome.length > 1 ? `${partesNome[0]} ${partesNome[1][0]}.` : partesNome[0];
+
+  msg.innerHTML = `Notar ausência de <strong>${nomeReduzido}</strong>. Enviar aviso LGPD ao responsável?`;
+  
+  toast.style.display = 'flex';
+
+  // Configura o clique do botão de envio
+  btn.onclick = () => enviarAlertaWhatsapp(aluno.nome, nomeReduzido);
+}
+
+function fecharToast() {
+  const toast = document.getElementById('waToast');
+  toast.style.display = 'none';
+}
+
+function enviarAlertaWhatsapp(nomeCompleto, nomeReduzido) {
+  fecharToast();
+  
+  const escolaNome = "Minha Escola Modelo";
+  const telefoneSecretaria = "(11) 9999-9999";
+  
+  // TÉXTO 100% LGPD COMPLIANT
+  const texto = `Olá! Esta é uma *mensagem automática* da *${escolaNome}*.\n\nRegistramos a ausência do(a) aluno(a) *${nomeReduzido}* na presente data.\n\nPor motivos de segurança e acompanhamento pedagógico, solicitamos que entre em contato direto com a secretaria da unidade escolar para tratar sobre esta frequência.\n\nPor favor, *não responda a este sistema automático*, utilize nossos canais oficiais no número ${telefoneSecretaria}.`;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  
+  // Abre em nova aba simulação
+  window.open(url, '_blank');
 }
 
 function recalcularTotaisLocais() {

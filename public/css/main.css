@@ -144,3 +144,88 @@ main {
   font-size: 0.9rem;
   color: var(--text-muted);
 }
+
+/* WA Toast Notification */
+.wa-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: white;
+  min-width: 320px;
+  max-width: 400px;
+  padding: 1rem;
+  border-radius: var(--radius);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 9999;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.wa-toast-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wa-icon {
+  font-size: 2rem;
+  background: #DCFCE7;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.wa-text strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+
+.wa-text p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.wa-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-top: 1px solid #F3F4F6;
+  padding-top: 0.8rem;
+}
+
+.btn-wa {
+  background: #25D366;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+
+.btn-wa:hover { opacity: 0.9; }
+
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+

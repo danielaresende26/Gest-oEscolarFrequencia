@@ -64,6 +64,21 @@
 
   </main>
 
+    <!-- Toast Notification WhatsApp (LGPD) -->
+    <div id="waToast" class="wa-toast" style="display: none;">
+      <div class="wa-toast-content">
+        <span class="wa-icon">📲</span>
+        <div class="wa-text">
+          <strong id="waToastTitle">Falta Registrada</strong>
+          <p id="waToastMsg">Deseja enviar o aviso automático ao responsável?</p>
+        </div>
+      </div>
+      <div class="wa-actions">
+        <button class="btn-ghost" onclick="fecharToast()">Agora não</button>
+        <button class="btn-wa" id="btnEnviarWA">Enviar Aviso</button>
+      </div>
+    </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/api.v2.js"></script>
   <script src="./js/excel.js"></script>
