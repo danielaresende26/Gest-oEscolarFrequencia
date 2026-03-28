@@ -1,0 +1,186 @@
+/* Excel Grid System */
+.excel-container {
+  overflow-x: auto;
+  border: 1px solid #E5E7EB;
+  border-radius: var(--radius-sm);
+  background: white;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  max-height: 70vh;
+  position: relative;
+}
+
+.excel-grid {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Base headers */
+.excel-grid th {
+  background-color: #F8FAFC;
+  color: var(--text-main);
+  font-weight: 600;
+  padding: 0.8rem 0.5rem;
+  border: 1px solid #E2E8F0;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: inset 0 -1px 0 #E2E8F0;
+}
+
+/* Aluno Column Sticky Left */
+.aluno-col,
+.aluno-nome {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background-color: #F8FAFC;
+  z-index: 15;
+  font-weight: 500;
+  padding: 0.8rem 1.2rem !important;
+  border-right: 2px solid #CBD5E1 !important;
+}
+
+/* Cells */
+.excel-grid td {
+  border: 1px solid #E2E8F0;
+  padding: 0.8rem 0;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.dia-col {
+  min-width: 45px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dia-col:hover {
+  background: #E2E8F0 !important;
+}
+
+.dia-num {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+.dia-semana {
+  display: block;
+  font-size: 0.70rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
+
+/* Interactivity (Clickable Excel Cells) */
+.freq-cell {
+  cursor: pointer;
+  font-weight: 600;
+  position: relative;
+}
+
+.freq-cell:hover::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 2px solid var(--secondary);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Status Colors */
+
+/* P - Presente */
+.status-P {
+  background-color: var(--success-bg) !important;
+  color: var(--success-text);
+}
+
+/* F - Falta */
+.status-F {
+  background-color: var(--danger-bg) !important;
+  color: var(--danger-text);
+}
+
+/* J - Justificada */
+.status-J {
+  background-color: var(--warning-bg) !important;
+  color: var(--warning-text);
+}
+
+/* Not interactive elements */
+.dia-feriado, .dia-reuniao, .dia-fim-semana {
+  background-color: #F1F5F9 !important;
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.dia-fim-semana {
+  opacity: 0.5;
+}
+
+/* Resumo Pct */
+.total-col {
+  width: 70px;
+  background-color: #F8FAFC;
+  position: sticky;
+  right: 0;
+  z-index: 15;
+  border-left: 2px solid #CBD5E1 !important;
+}
+
+.total-pct {
+  font-weight: 700;
+  background-color: #FAFAF9;
+  position: sticky;
+  right: 0;
+  border-left: 2px solid #CBD5E1 !important;
+  z-index: 5;
+}
+
+.pct-danger {
+  color: var(--danger-text);
+  background-color: var(--danger-bg);
+}
+
+/* Actions Ribbon Settings */
+.tools-ribbon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  gap: 1.5rem;
+}
+
+.ribbon-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.tools-ribbon select {
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid #D1D5DB;
+}
+
+/* Loading Skeleton */
+.loading-row td {
+  background: #F1F5F9;
+  animation: pulse 1.5s infinite;
+  color: transparent;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}

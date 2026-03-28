@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preenchimento - Gestão Escolar</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/excel.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span style="font-size: 1.5rem">📅</span> Frequências
+    </div>
+    <div>
+      <span id="userNameDisplay">Professor(a)</span>
+      <button onclick="logout()" class="btn btn-outline" style="margin-left: 1rem;">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tools-ribbon">
+      <div class="ribbon-controls">
+        <div class="form-group" style="margin: 0;">
+          <label>Selecione a Turma</label>
+          <select id="turmaSelect" onchange="carregarGrade()">
+            <option value="">Carregando...</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label>Mês</label>
+          <select id="mesSelect" onchange="carregarGrade()">
+            <option value="1">Janeiro</option>
+            <option value="2">Fevereiro</option>
+            <option value="3">Março</option>
+            <option value="4">Abril</option>
+            <option value="5">Maio</option>
+            <option value="6">Junho</option>
+            <option value="7">Julho</option>
+            <option value="8">Agosto</option>
+            <option value="9">Setembro</option>
+            <option value="10">Outubro</option>
+            <option value="11">Novembro</option>
+            <option value="12">Dezembro</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="salvarGrade()" id="btnSave">
+          <svg style="width:16px;height:16px" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 2l-6-6h4V3h4v5h4l-6 6z"/>
+          </svg>
+          Salvar Alterações
+        </button>
+      </div>
+    </div>
+
+    <!-- Container do Excel -->
+    <div class="excel-container" id="gridContainer">
+      <!-- Gerado via JS -->
+      Carregando interface da grade...
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/excel.js"></script>
+
+  <script>
+    // Inicialização do Mês Atual
+    const t = new Date();
+    document.getElementById('mesSelect').value = t.getMonth() + 1;
+
+    async function checkAuthAndLoad() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+      // Aqui faríamos uma busca pelas turmas do professor vinculado
+      // Por enquanto, carrega de forma mockada para a UI funcionar
+      document.getElementById('turmaSelect').innerHTML = `
+        <option value="123e4567-e89b-12d3-a456-426614174000">7º Ano A</option>
+        <option value="987e6543-e21b-12d3-a456-426614174001">8º Ano B</option>
+      `;
+
+      carregarGrade();
+    }
+
+    function logout() {
+      supabaseClient.auth.signOut().then(() => {
+        window.location.href = './index.html';
+      });
+    }
+
+    window.onload = checkAuthAndLoad;
+  </script>
+</body>
+</html>

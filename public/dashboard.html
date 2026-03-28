@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Analítico - Gestão Escolar</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .grid-dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .stat-card {
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      background: white;
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--primary);
+    }
+    .stat-title { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; }
+    .stat-value { font-size: 2.5rem; font-weight: 700; color: var(--text-main); margin-top: 0.5rem; }
+    
+    .chart-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span style="font-size: 1.5rem">📊</span> Dashboard Admin
+    </div>
+    <div>
+      <span id="userNameDisplay">Diretor(a)</span>
+      <button onclick="window.location.href='./frequencia.html'" class="btn btn-outline" style="margin-left: 1rem;">Ir para Frequências</button>
+    </div>
+  </header>
+
+  <main>
+    <h2>Visão Geral da Escola</h2>
+    
+    <div class="grid-dashboard">
+      <div class="stat-card" style="border-left-color: var(--danger-text);">
+        <div class="stat-title">Alunos em Risco (< 75%)</div>
+        <div class="stat-value" id="valRisco">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Turmas Ativas</div>
+        <div class="stat-value" id="valTurmas">--</div>
+      </div>
+      <div class="stat-card" style="border-left-color: var(--secondary);">
+        <div class="stat-title">Dia Crítico Semanal</div>
+        <div class="stat-value" id="valDiaCritico" style="font-size: 1.8rem">--</div>
+      </div>
+    </div>
+
+    <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
+      <div class="chart-container">
+        <h3>Padrão de Faltas por Dia da Semana</h3>
+        <canvas id="faltasChart" height="100"></canvas>
+      </div>
+
+      <div class="chart-container" style="overflow-y: auto; max-height: 400px;">
+        <h3 style="color: var(--danger-text)">Ranking de Faltas</h3>
+        <ul id="rankingList" style="list-style: none; margin-top: 1rem; padding: 0;">
+          <!-- Injetado via JS -->
+        </ul>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="./js/api.js"></script>
+  <script src="./js/dashboard.js"></script>
+</body>
+</html>
