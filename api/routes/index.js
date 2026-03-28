@@ -40,4 +40,12 @@ router.get('/relatorios/dashboard', relatorioController.dashboard);
 router.post('/whatsapp/disparar', whatsappController.dispararManual);
 router.get('/whatsapp/agendados', whatsappController.obterAgendados);
 
+// --- Configurações Iniciais Seguro/Cloud ---
+router.get('/config', (req, res) => {
+  res.json({
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_KEY: process.env.SUPABASE_KEY
+  });
+});
+
 module.exports = router;

@@ -74,11 +74,19 @@
     document.getElementById('mesSelect').value = t.getMonth() + 1;
 
     async function checkAuthAndLoad() {
+      await window.initSupabase();
+
+      if (!supabaseClient) {
+         window.location.href = './index.html';
+         return;
+      }
+
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         window.location.href = './index.html';
         return;
       }
+      
       // Aqui faríamos uma busca pelas turmas do professor vinculado
       // Por enquanto, carrega de forma mockada para a UI funcionar
       document.getElementById('turmaSelect').innerHTML = `
@@ -90,9 +98,11 @@
     }
 
     function logout() {
-      supabaseClient.auth.signOut().then(() => {
-        window.location.href = './index.html';
-      });
+      if(supabaseClient) {
+        supabaseClient.auth.signOut().then(() => {
+          window.location.href = './index.html';
+        });
+      }
     }
 
     window.onload = checkAuthAndLoad;
