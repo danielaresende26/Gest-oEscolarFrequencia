@@ -149,7 +149,7 @@ function exibirSugestaoAlerta(aluno) {
   const partesNome = aluno.nome.split(' ');
   const nomeReduzido = partesNome.length > 1 ? `${partesNome[0]} ${partesNome[1][0]}.` : partesNome[0];
 
-  msg.innerHTML = `Notar ausência de <strong>${nomeReduzido}</strong>. Enviar aviso LGPD ao responsável?`;
+  msg.innerHTML = `Deseja enviar aviso de ausência de <strong>${nomeReduzido}</strong> ao responsável?`;
   
   toast.style.display = 'flex';
 
