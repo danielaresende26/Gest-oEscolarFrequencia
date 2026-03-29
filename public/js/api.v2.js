@@ -44,26 +44,53 @@ window.initSupabase = async function() {
  */
 async function initAdminNav(client) {
   try {
+    console.log("🕵️ Iniciando verificação de permissões...");
     const { data: { user } } = await client.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      console.log("⚠️ Nenhum usuário logado.");
+      return;
+    }
 
-    const { data: userData } = await client.from('usuarios').select('perfil, nome').eq('id', user.id).single();
+    let { data: userData, error: fetchError } = await client.from('usuarios').select('perfil, nome, escola_id').eq('id', user.id).single();
+    
+    // CASO DE EMERGÊNCIA: Se o usuário logou no Auth mas não tem entrada na tabela 'usuarios'
+    // Provavelmente é o dono da escola/primeiro acesso. Vamos auto-vincular como admin.
+    if (!userData && !fetchError) {
+       console.log("🛠️ Usuário sem perfil detectado. Tentando auto-vinculação como ADMIN...");
+       const meta = user.user_metadata || {};
+       const novoPerfil = {
+         id: user.id,
+         nome: meta.nome || user.email.split('@')[0],
+         escola_id: meta.escola_id || null, // Se for o dono, pode estar null inicialmente
+         perfil: 'admin'
+       };
+       const { data: created, error: createError } = await client.from('usuarios').insert([novoPerfil]).select().single();
+       if (!createError) {
+         userData = created;
+         console.log("✅ Auto-vinculação de ADMIN concluída com sucesso.");
+       } else {
+         console.error("❌ Falha na auto-vinculação:", createError);
+       }
+    }
+
     if (userData) {
-      // Atualiza nome na UI se houver campo
+      console.log(`👤 Usuário: ${userData.nome} | Perfil: ${userData.perfil}`);
+      
       const userNameEl = document.getElementById('userName');
       if (userNameEl) userNameEl.innerText = userData.nome;
 
-      // Mostra o link da Equipe se for Admin
-      if (userData.perfil === 'admin') {
-        const navEquipe = document.getElementById('navEquipe');
-        if (navEquipe) navEquipe.style.display = 'inline-block';
-        console.log("👑 Perfil Admin detectado. Menu Equipe habilitado.");
-      } else {
-        console.log("👤 Perfil Professor detectado.");
+      const navEquipe = document.getElementById('navEquipe');
+      if (navEquipe) {
+        if (userData.perfil === 'admin') {
+          navEquipe.style.display = 'inline-block';
+          console.log("👑 Menu EQUIPE habilitado.");
+        } else {
+          console.log("🚫 Menu EQUIPE bloqueado para professores.");
+        }
       }
     }
   } catch (err) {
-    console.error("Erro ao validar perfil admin:", err);
+    console.error("💥 Erro fatal no initAdminNav:", err);
   }
 }
 
