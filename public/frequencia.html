@@ -87,28 +87,6 @@
   <script src="./js/excel.v3.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const client = await window.initSupabase();
-      const { data: { user } } = await client.auth.getUser();
-      if (user) {
-        const { data: userData } = await client.from('usuarios').select('nome, perfil').eq('id', user.id).single();
-        if (userData) {
-          document.getElementById('userName').innerText = userData.nome;
-          if (userData.perfil === 'admin') {
-            document.getElementById('navEquipe').style.display = 'inline-block';
-          }
-        }
-      }
-    });
-
-    function logout() {
-      supabaseClient.auth.signOut().then(() => {
-        window.location.href = 'index.html';
-      });
-    }
-  </script>
-
-  <script>
     // Inicialização do Mês Atual
     const t = new Date();
     document.getElementById('mesSelect').value = t.getMonth() + 1;

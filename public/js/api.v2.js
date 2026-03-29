@@ -28,10 +28,42 @@ window.initSupabase = async function() {
     const res = await fetch(`${API_BASE_URL}/config`);
     const config = await res.json();
     supabaseClient = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_KEY);
-    console.log("✅ Supabase Client inicializado com sucesso.");
+    console.log("✅ Supabase Client inicializado.");
+    
+    // Auto-check Admin Menu
+    initAdminNav(supabaseClient);
+
     return supabaseClient;
   } catch(e) {
     console.error("Erro critico: Não conseguiu buscar de /api/config", e);
+  }
+}
+
+/**
+ * Verifica se o usuário logado é Admin e mostra o botão de Equipe se existir.
+ */
+async function initAdminNav(client) {
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return;
+
+    const { data: userData } = await client.from('usuarios').select('perfil, nome').eq('id', user.id).single();
+    if (userData) {
+      // Atualiza nome na UI se houver campo
+      const userNameEl = document.getElementById('userName');
+      if (userNameEl) userNameEl.innerText = userData.nome;
+
+      // Mostra o link da Equipe se for Admin
+      if (userData.perfil === 'admin') {
+        const navEquipe = document.getElementById('navEquipe');
+        if (navEquipe) navEquipe.style.display = 'inline-block';
+        console.log("👑 Perfil Admin detectado. Menu Equipe habilitado.");
+      } else {
+        console.log("👤 Perfil Professor detectado.");
+      }
+    }
+  } catch (err) {
+    console.error("Erro ao validar perfil admin:", err);
   }
 }
 

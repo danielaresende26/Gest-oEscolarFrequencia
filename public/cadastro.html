@@ -191,31 +191,11 @@
   <!-- Bibliotecas externas -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Bibliotecas externas -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0/dist/umd/supabase.js"></script>
   <script src="./js/api.v2.js"></script>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Pequeno delay para garantir que api.v2.js inicializou o initSupabase
-      setTimeout(async () => {
-          const client = await window.initSupabase();
-          const { data: { user } } = await client.auth.getUser();
-          if (user) {
-            const { data: userData } = await client.from('usuarios').select('perfil').eq('id', user.id).single();
-            if (userData && userData.perfil === 'admin') {
-              const nav = document.getElementById('navEquipe');
-              if(nav) nav.style.display = 'inline-block';
-            }
-          }
-      }, 500);
-    });
-
-    function logout() {
-      supabaseClient.auth.signOut().then(() => {
-        window.location.href = 'index.html';
-      });
-    }
-  </script>
   <script src="./js/cadastro.js"></script>
 </body>
 </html>

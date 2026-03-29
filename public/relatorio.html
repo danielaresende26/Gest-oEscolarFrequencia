@@ -80,10 +80,6 @@
             return;
         }
 
-        if (userData.perfil === 'admin') {
-            document.getElementById('navEquipe').style.display = 'inline-block';
-        }
-
         const escolaId = userData.escola_id;
         const res = await apiFetch(`/turmas?escola_id=${escolaId}`);
         const select = document.getElementById('relatorioTurma');
