@@ -76,7 +76,8 @@ formTurma.onsubmit = async (e) => {
         formTurma.reset();
         await carregarTurmas();
     } catch (err) {
-        msg.innerHTML = `<div class="alert danger">Houve um problema: ${err.message}.</div>`;
+        const detail = err.details ? ` (${err.details})` : '';
+        msg.innerHTML = `<div class="alert danger">Houve um problema: ${err.message}${detail}.</div>`;
         msg.style.display = 'block';
     } finally {
         btn.disabled = false;

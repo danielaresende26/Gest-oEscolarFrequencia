@@ -65,7 +65,9 @@ async function apiFetch(endpoint, options = {}) {
   if (!response.ok) {
     let errBody = {};
     try { errBody = await response.json(); } catch(e){}
-    throw new Error(errBody.error || `Erro HTTP ${response.status}`);
+    const error = new Error(errBody.error || `Erro HTTP ${response.status}`);
+    error.details = errBody.details; // Atribui os detalhes extras
+    throw error;
   }
 
   return response.json();
