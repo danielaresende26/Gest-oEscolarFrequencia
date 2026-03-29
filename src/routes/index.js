@@ -21,6 +21,8 @@ router.get('/turmas', turmaController.listarPorEscola);
 router.post('/alunos', alunoController.criar);
 router.post('/alunos/bulk', alunoController.criarBulk);
 router.get('/alunos', alunoController.listarPorTurma);
+router.put('/alunos/:id', alunoController.atualizar);
+router.delete('/alunos/:id', alunoController.deletar);
 
 // --- Frequência ---
 router.post('/frequencias/lote', frequenciaController.salvarLote);

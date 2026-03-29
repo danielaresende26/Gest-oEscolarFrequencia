@@ -1,23 +1,23 @@
-// Logica de Cadastro de Alunos e Turmas
-let escolaId = null; 
-let turmasCarregadas = [];
+let userProfile = null;
+let userId = null;
 
 // Ao carregar a página
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Iniciar Supabase (pelo api.v2.js)
-    await window.initSupabase();
+    const client = await window.initSupabase();
     
     // 2. Tentar descobrir a escola logada consultando o banco
-    const client = await window.initSupabase();
     const { data: { user } } = await client.auth.getUser();
     if (!user) return window.location.href = 'index.html';
     
-    const { data: userData } = await client.from('usuarios').select('escola_id').eq('id', user.id).single();
+    userId = user.id;
+    const { data: userData } = await client.from('usuarios').select('escola_id, perfil').eq('id', user.id).single();
     if (!userData || !userData.escola_id) {
         alert("Sua conta ainda não está vinculada a nenhuma escola! Configure no Supabase.");
         return;
     }
     escolaId = userData.escola_id; 
+    userProfile = userData.perfil;
 
     await carregarTurmas();
     initBulkHandlers();
@@ -25,18 +25,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function carregarTurmas() {
     const select = document.getElementById('selectTurmaAlunos');
+    const filterSelect = document.getElementById('filterTurmaAlunos');
     try {
         const res = await apiFetch(`/turmas?escola_id=${escolaId}`);
         turmasCarregadas = res;
         
-        if (turmasCarregadas.length === 0) {
-            select.innerHTML = '<option value="">Crie uma turma primeiro à esquerda</option>';
-            return;
-        }
+        const options = turmasCarregadas.length === 0 
+            ? '<option value="">Crie uma turma primeiro à esquerda</option>'
+            : turmasCarregadas.map(t => `<option value="${t.id}">${t.nome} (${t.periodo})</option>`).join('');
 
-        select.innerHTML = turmasCarregadas.map(t => 
-            `<option value="${t.id}">${t.nome} (${t.periodo})</option>`
-        ).join('');
+        select.innerHTML = options;
+        if (filterSelect) {
+            filterSelect.innerHTML = '<option value="">Selecione uma turma para ver os alunos...</option>' + options;
+        }
         
     } catch (e) {
         console.error(e);
@@ -238,7 +239,94 @@ function downloadModelo() {
     link.click();
 }
 
+// --- GERENCIAMENTO DE ALUNOS ---
+let alunosNaLista = [];
+
+async function carregarAlunos() {
+    const turmaId = document.getElementById('filterTurmaAlunos').value;
+    const body = document.getElementById('studentListBody');
+
+    if (!turmaId) {
+        body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem;">Selecione uma turma acima para listar os alunos.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem;">Buscando alunos...</td></tr>';
+
+    try {
+        const alunos = await apiFetch(`/alunos?turma_id=${turmaId}`);
+        alunosNaLista = alunos;
+
+        if (alunos.length === 0) {
+            body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem;">Nenhum aluno encontrado nesta turma.</td></tr>';
+            return;
+        }
+
+        body.innerHTML = alunos.map(aluno => {
+            const zap = aluno.contatos && aluno.contatos.length > 0 ? aluno.contatos[0].numero : '-';
+            const canDelete = userProfile === 'admin';
+            
+            return `
+                <tr>
+                    <td><strong>${aluno.nome}</strong></td>
+                    <td>${zap}</td>
+                    <td style="text-align:right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="btn-outline btn-sm" onclick="abrirEdicao('${aluno.id}')">✏️ Editar</button>
+                        <button class="btn-outline btn-sm danger" 
+                                ${canDelete ? '' : 'disabled title="Apenas administradores podem excluir"'} 
+                                onclick="deletarAluno('${aluno.id}')">🗑️ Excluir</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (e) {
+        body.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red; padding: 2rem;">Erro: ${e.message}</td></tr>`;
+    }
+}
+
+async function abrirEdicao(id) {
+    const aluno = alunosNaLista.find(a => a.id === id);
+    if (!aluno) return;
+
+    const novoNome = prompt("Novo Nome do Aluno:", aluno.nome);
+    if (novoNome === null) return;
+
+    const zapAtual = aluno.contatos && aluno.contatos.length > 0 ? aluno.contatos[0].numero : '';
+    const novoZap = prompt("Novo WhatsApp (DDD + Número):", zapAtual);
+    if (novoZap === null) return;
+
+    try {
+        await apiFetch(`/alunos/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                nome: novoNome,
+                turma_id: aluno.turma_id,
+                whatsapp: novoZap
+            })
+        });
+        alert("Aluno atualizado!");
+        await carregarAlunos();
+    } catch (e) {
+        alert("Erro ao atualizar: " + e.message);
+    }
+}
+
+async function deletarAluno(id) {
+    if (!confirm("Tem certeza que deseja excluir este aluno? Esta ação não pode ser desfeita.")) return;
+
+    try {
+        // Passamos o userId na query para o backend verificar o perfil
+        await apiFetch(`/alunos/${id}?user_id=${userId}`, { method: 'DELETE' });
+        alert("Aluno removido!");
+        await carregarAlunos();
+    } catch (e) {
+        alert("Erro ao excluir: " + e.message);
+    }
+}
+
 function logout() {
-    localStorage.clear();
-    window.location.href = 'index.html';
+    supabaseClient.auth.signOut().then(() => {
+        window.location.href = 'index.html';
+    });
 }

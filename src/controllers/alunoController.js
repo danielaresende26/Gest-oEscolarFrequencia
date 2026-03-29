@@ -75,3 +75,65 @@ exports.criarBulk = async (req, res) => {
     res.status(500).json({ error: 'Erro ao importar alunos', details: err.message });
   }
 };
+exports.atualizar = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nome, turma_id, whatsapp } = req.body;
+
+    // 1. Atualizar Aluno
+    const { error: alunoError } = await supabase
+      .from('alunos')
+      .update({ nome, turma_id })
+      .eq('id', id);
+
+    if (alunoError) throw alunoError;
+
+    // 2. Atualizar ou Inserir WhatsApp (Contato)
+    if (whatsapp) {
+      const { error: contatoError } = await supabase
+        .from('contatos')
+        .upsert([{ 
+          aluno_id: id, 
+          numero: whatsapp, 
+          nome_contato: 'Principal', 
+          is_whatsapp: true 
+        }], { onConflict: 'aluno_id,nome_contato' });
+
+      if (contatoError) console.error('Erro ao atualizar contato:', contatoError);
+    }
+
+    res.json({ message: 'Aluno atualizado com sucesso' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao atualizar aluno', details: err.message });
+  }
+};
+
+exports.deletar = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id } = req.query; // Temporário enquanto não temos middleware de auth robusto
+
+    if (!user_id) return res.status(401).json({ error: 'Usuário não identificado.' });
+
+    // Verificar se o usuário é ADMIN
+    const { data: usuario, error: userError } = await supabase
+      .from('usuarios')
+      .select('perfil')
+      .eq('id', user_id)
+      .single();
+
+    if (userError || !usuario || usuario.perfil !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado. Apenas administradores podem deletar alunos.' });
+    }
+
+    // Deletar Aluno (Contatos e Frequências serão deletados via CASCADE no banco)
+    const { error } = await supabase.from('alunos').delete().eq('id', id);
+
+    if (error) throw error;
+    res.json({ message: 'Aluno removido com sucesso' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao deletar aluno', details: err.message });
+  }
+};

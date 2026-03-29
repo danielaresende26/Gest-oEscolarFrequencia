@@ -154,7 +154,34 @@
         </div>
       </div>
 
-      <div id="alunoMsg" style="margin-top:1rem; display:none;"></div>
+    <!-- SEÇÃO 3: GERENCIAMENTO DE ALUNOS -->
+    <section class="card" style="grid-column: 1 / -1; margin-top: 1rem;">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1.5rem;">
+        <span style="font-size:1.5rem;">⚙️</span>
+        <h2 style="margin:0;">3. Gerenciar Alunos Cadastrados</h2>
+      </div>
+      
+      <div class="form-group" style="max-width: 400px; margin-bottom: 2rem;">
+        <label>Filtrar por Turma</label>
+        <select id="filterTurmaAlunos" onchange="carregarAlunos()">
+          <option value="">Selecione uma turma para ver os alunos...</option>
+        </select>
+      </div>
+
+      <div class="bulk-preview" style="max-height: 500px; border: none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome do Aluno</th>
+              <th>WhatsApp</th>
+              <th style="text-align:right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="studentListBody">
+            <tr><td colspan="3" style="text-align:center; padding: 2rem;">Selecione uma turma acima para listar os alunos.</td></tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
   </main>
