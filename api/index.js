@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Main Router Imports
-const mainRoutes = require('./routes/index');
+const mainRoutes = require('../src/routes/index');
 
 app.use('/api', mainRoutes);
 
