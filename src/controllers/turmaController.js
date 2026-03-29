@@ -28,8 +28,14 @@ exports.criar = async (req, res) => {
 
     res.status(201).json({ message: 'Turma criada e calendário gerado!', turma });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao criar turma', details: err.message });
+    console.error('ERRO CRITICO AO CRIAR TURMA:', err);
+    res.status(500).json({ 
+      error: 'Erro ao criar turma', 
+      details: err.message,
+      code: err.code,
+      hint: err.hint,
+      stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined
+    });
   }
 };
 
