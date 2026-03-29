@@ -3,8 +3,17 @@ const calendarioService = require('../services/calendarioService');
 
 exports.criar = async (req, res) => {
   try {
-    const { escola_id, nome, periodo, horario_inicio, horario_fim, dia_semana } = req.body;
+    const { escola_id, nome, periodo, dia_semana } = req.body;
+    let { horario_inicio, horario_fim } = req.body;
     
+    // Fallback de horários padrão se não forem enviados pelo front
+    if (!horario_inicio || !horario_fim) {
+      if (periodo === 'Manhã') { horario_inicio = '07:00:00'; horario_fim = '12:30:00'; }
+      else if (periodo === 'Tarde') { horario_inicio = '13:00:00'; horario_fim = '18:30:00'; }
+      else if (periodo === 'Noite') { horario_inicio = '19:00:00'; horario_fim = '22:30:00'; }
+      else { horario_inicio = '07:00:00'; horario_fim = '17:00:00'; } // Integral
+    }
+
     const { data: turma, error } = await supabase
       .from('turmas')
       .insert([{ escola_id, nome, periodo, horario_inicio, horario_fim, dia_semana }])

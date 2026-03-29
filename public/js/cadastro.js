@@ -54,6 +54,14 @@ formTurma.onsubmit = async (e) => {
     btn.disabled = true;
     btn.innerText = 'Gerando...';
 
+    if (!escolaId) {
+        msg.innerHTML = '<div class="alert danger">Erro: Sua escola não foi carregada. Tente atualizar a página.</div>';
+        msg.style.display = 'block';
+        btn.disabled = false;
+        btn.innerText = 'Criar Turma e Calendário';
+        return;
+    }
+
     const payload = {
         escola_id: escolaId,
         nome: document.getElementById('turmaNome').value,
