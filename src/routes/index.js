@@ -33,7 +33,7 @@ router.post('/calendario/recesso', calendarioController.marcarRecesso);
 
 // --- Relatórios e Analytics ---
 router.get('/relatorios/semanal', relatorioController.obterSemanal);
-router.get('/relatorios/turma', relatorioController.obterPorTurma);
+// router.get('/relatorios/turma', relatorioController.obterPorTurma);
 router.get('/relatorios/aluno', relatorioController.obterPorAluno);
 router.get('/relatorios/dias-criticos', relatorioController.diasCriticos);
 router.get('/relatorios/dashboard', relatorioController.dashboard);
