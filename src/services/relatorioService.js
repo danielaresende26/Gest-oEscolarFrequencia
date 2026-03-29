@@ -16,7 +16,7 @@ exports.gerarMatrizSemanal = async (turma_id, data_inicio, data_fim) => {
 
   // 2. Buscar calendário do período (Segunda a Sexta)
   const { data: calendario, error: calErr } = await supabase
-    .from('calendarios')
+    .from('calendario_aulas')
     .select('id, data, tipo')
     .eq('turma_id', turma_id)
     .gte('data', data_inicio)
@@ -26,13 +26,17 @@ exports.gerarMatrizSemanal = async (turma_id, data_inicio, data_fim) => {
   if (calErr) throw calErr;
 
   // 3. Buscar frequências registradas
-  const { data: frequencias, error: freqErr } = await supabase
-    .from('frequencias')
-    .select('*')
-    .in('aluno_id', alunos.map(a => a.id))
-    .in('calendario_id', calendario.map(c => c.id));
+  let frequencias = [];
+  if (alunos.length > 0 && calendario.length > 0) {
+    const { data: freqs, error: freqErr } = await supabase
+      .from('frequencias')
+      .select('*')
+      .in('aluno_id', alunos.map(a => a.id))
+      .in('calendario_id', calendario.map(c => c.id));
 
-  if (freqErr) throw freqErr;
+    if (freqErr) throw freqErr;
+    frequencias = freqs;
+  }
 
   // 4. Montar a Matriz (Pivot)
   const matriz = alunos.map(aluno => {
