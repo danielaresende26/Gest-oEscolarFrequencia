@@ -14,6 +14,7 @@
       <span style="font-size: 1.5rem">📅</span> Frequências
     </div>
       <div class="nav-links">
+        <a href="equipe.html" id="navEquipe" class="btn-ghost" style="display:none;" title="Gerenciar Equipe">👥 Equipe</a>
         <a href="cadastro.html" class="btn-ghost" title="Cadastrar Alunos e Turmas">⚙️ Gestão</a>
         <a href="relatorio.html" class="btn-ghost" title="Visualizar Relatório Semanal">📅 Semanal</a>
         <span id="userName" class="user-info">Professor(a)</span>
@@ -84,6 +85,28 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0/dist/umd/supabase.js"></script>
   <script src="./js/api.v2.js"></script>
   <script src="./js/excel.v3.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const client = await window.initSupabase();
+      const { data: { user } } = await client.auth.getUser();
+      if (user) {
+        const { data: userData } = await client.from('usuarios').select('nome, perfil').eq('id', user.id).single();
+        if (userData) {
+          document.getElementById('userName').innerText = userData.nome;
+          if (userData.perfil === 'admin') {
+            document.getElementById('navEquipe').style.display = 'inline-block';
+          }
+        }
+      }
+    });
+
+    function logout() {
+      supabaseClient.auth.signOut().then(() => {
+        window.location.href = 'index.html';
+      });
+    }
+  </script>
 
   <script>
     // Inicialização do Mês Atual

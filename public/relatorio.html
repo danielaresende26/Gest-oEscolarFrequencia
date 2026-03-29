@@ -23,6 +23,7 @@
     <div class="nav-content">
       <div class="logo">📚 Diário <span>Semanal</span></div>
       <div class="nav-links">
+        <a href="equipe.html" id="navEquipe" class="btn-ghost" style="display:none;" title="Gerenciar Equipe">👥 Equipe</a>
         <a href="frequencia.html" class="btn-ghost">Voltar ao Diário Mensal</a>
         <button onclick="window.print()" class="btn-outline">🖨️ Imprimir</button>
       </div>
@@ -48,6 +49,13 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0/dist/umd/supabase.js"></script>
+  <script>
+    function logout() {
+      supabaseClient.auth.signOut().then(() => {
+        window.location.href = 'index.html';
+      });
+    }
+  </script>
   <script src="./js/api.v2.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
@@ -66,10 +74,14 @@
         const { data: { user } } = await client.auth.getUser();
         if(!user) return;
 
-        const { data: userData } = await client.from('usuarios').select('escola_id').eq('id', user.id).single();
+        const { data: userData } = await client.from('usuarios').select('escola_id, perfil').eq('id', user.id).single();
         if (!userData || !userData.escola_id) {
             document.getElementById('relatorioContainer').innerHTML = `<div style="padding: 3rem; text-align: center;">Vincule sua conta a uma escola no Supabase primeiro.</div>`;
             return;
+        }
+
+        if (userData.perfil === 'admin') {
+            document.getElementById('navEquipe').style.display = 'inline-block';
         }
 
         const escolaId = userData.escola_id;

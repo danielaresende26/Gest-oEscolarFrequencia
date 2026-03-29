@@ -12,6 +12,7 @@ const frequenciaController = require('../controllers/frequenciaController');
 const calendarioController = require('../controllers/calendarioController');
 const relatorioController = require('../controllers/relatorioController');
 const whatsappController = require('../controllers/whatsappController');
+const usuarioController = require('../controllers/usuarioController');
 
 // --- Turmas ---
 router.post('/turmas', turmaController.criar);
@@ -43,6 +44,11 @@ router.get('/relatorios/dashboard', relatorioController.dashboard);
 // --- WhatsApp (Evolution API) ---
 router.post('/whatsapp/disparar', whatsappController.dispararManual);
 router.get('/whatsapp/agendados', whatsappController.obterAgendados);
+
+// --- Gestão de Equipe (Usuários) ---
+router.get('/usuarios/equipe', usuarioController.listarEquipe);
+router.post('/usuarios/equipe', usuarioController.criarMembroEquipe);
+router.delete('/usuarios/equipe/:id', usuarioController.removerMembro);
 
 // --- Configurações Iniciais Seguro/Cloud ---
 router.get('/config', (req, res) => {

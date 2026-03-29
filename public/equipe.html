@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipe - Gestão Escolar</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/excel.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <nav class="main-nav">
+    <div class="nav-content">
+      <div class="logo">👥 Gestão de <span>Equipe</span></div>
+      <div class="nav-links" id="adminNav">
+        <a href="frequencia.html" class="btn-ghost">Diário</a>
+        <a href="cadastro.html" class="btn-ghost">Gestão</a>
+        <button onclick="logout()" class="btn-outline">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-header" style="text-align:center; padding: 2rem 0;">
+    <h1>Membros da Unidade</h1>
+    <p class="text-muted">Adicione professores e administradores para gerenciar a escola.</p>
+  </header>
+
+  <main class="cadastro-container" style="max-width: 1200px; margin: 0 auto; padding: 0 1rem; display: grid; grid-template-columns: 350px 1fr; gap: 2rem;">
+    
+    <!-- Formulário de Novo Membro -->
+    <section class="card">
+      <h2 style="margin-top:0;">➕ Novo Membro</h2>
+      <form id="formEquipe">
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input type="text" id="membroNome" placeholder="Ex: Prof. Roberto" required>
+        </div>
+        <div class="form-group">
+          <label>E-mail (Login)</label>
+          <input type="email" id="membroEmail" placeholder="roberto@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Senha Inicial</label>
+          <input type="password" id="membroSenha" placeholder="Minimo 6 caracteres" required>
+        </div>
+        <div class="form-group">
+          <label>Perfil de Acesso</label>
+          <select id="membroPerfil">
+            <option value="professor">Professor (Lança frequência)</option>
+            <option value="admin">Administrador (Gestão total)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary w-full" id="btnSalvar">Criar Conta</button>
+      </form>
+      <div id="membroMsg" style="margin-top:1rem; display:none;"></div>
+    </section>
+
+    <!-- Lista da Equipe -->
+    <section class="card">
+      <h2 style="margin-top:0;">👥 Equipe Atual</h2>
+      <div class="bulk-preview" style="max-height: 600px; border:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Perfil</th>
+              <th style="text-align:right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="listaEquipeBody">
+            <tr><td colspan="4" style="text-align:center; padding: 3rem;">Carregando equipe...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0/dist/umd/supabase.js"></script>
+  <script src="./js/api.v2.js"></script>
+  <script>
+    let escolaId = null;
+    let userId = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const client = await window.initSupabase();
+      const { data: { user } } = await client.auth.getUser();
+      if (!user) return window.location.href = 'index.html';
+      
+      userId = user.id;
+      const { data: userData } = await client.from('usuarios').select('escola_id, perfil').eq('id', user.id).single();
+      
+      if (!userData || userData.perfil !== 'admin') {
+        alert("Acesso restrito a administradores.");
+        window.location.href = 'frequencia.html';
+        return;
+      }
+      
+      escolaId = userData.escola_id;
+      carregarEquipe();
+    });
+
+    async function carregarEquipe() {
+      const body = document.getElementById('listaEquipeBody');
+      try {
+        const equipe = await apiFetch(`/usuarios/equipe?escola_id=${escolaId}`);
+        body.innerHTML = equipe.map(m => `
+          <tr>
+            <td><strong>${m.nome}</strong></td>
+            <td>${m.email || 'Acesso Direto'}</td>
+            <td><span class="badge ${m.perfil === 'admin' ? 'bg-primary' : 'bg-light'}">${m.perfil.toUpperCase()}</span></td>
+            <td style="text-align:right;">
+              <button class="btn-outline btn-sm danger" 
+                      ${m.id === userId ? 'disabled title="Você não pode se auto-excluir"' : ''}
+                      onclick="removerMembro('${m.id}')">Excluir</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Erro ao carregar: ${e.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById('formEquipe').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnSalvar');
+      const msg = document.getElementById('membroMsg');
+
+      const payload = {
+        nome: document.getElementById('membroNome').value,
+        email: document.getElementById('membroEmail').value,
+        senha: document.getElementById('membroSenha').value,
+        perfil: document.getElementById('membroPerfil').value,
+        escola_id: escolaId
+      };
+
+      btn.disabled = true;
+      btn.innerText = 'Criando conta...';
+
+      try {
+        await apiFetch('/usuarios/equipe', { method: 'POST', body: JSON.stringify(payload) });
+        msg.innerHTML = '<div class="alert success">Membro adicionado com sucesso!</div>';
+        msg.style.display = 'block';
+        e.target.reset();
+        carregarEquipe();
+      } catch (e) {
+        msg.innerHTML = `<div class="alert danger">Erro: ${e.message}</div>`;
+        msg.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Criar Conta';
+      }
+    };
+
+    async function removerMembro(id) {
+      if (!confirm("Tem certeza? O usuário perderá o acesso imediatamente.")) return;
+      try {
+        await apiFetch(`/usuarios/equipe/${id}?admin_user_id=${userId}`, { method: 'DELETE' });
+        carregarEquipe();
+      } catch (e) {
+        alert("Erro ao remover: " + e.message);
+      }
+    }
+
+    function logout() {
+      supabaseClient.auth.signOut().then(() => {
+        window.location.href = 'index.html';
+      });
+    }
+  </script>
+
+  <style>
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+    .bg-primary { background: var(--primary); color: white; }
+    .bg-light { background: #F1F5F9; color: #475569; }
+    .btn-sm { padding: 4px 8px; font-size: 0.8rem; }
+  </style>
+</body>
+</html>
