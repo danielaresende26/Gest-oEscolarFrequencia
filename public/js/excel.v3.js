@@ -40,11 +40,10 @@ async function carregarGrade() {
 
   try {
     // 1. Chamada real para obter a matriz mensal consolidada
-    const res = await apiFetch(`/relatorios/semanal?turma_id=${turmaId}&mes=${mes}&ano=${ano}`);
+    const res = await apiFetch(`/frequencias?turma_id=${turmaId}&mes=${mes}&ano=${ano}`);
     
-    // O backend de relatorios/semanal retorna { faixaDatas, alunos: [...] }
-    // Precisamos adaptar o stateBase para o renderGrid
-    stateBase.calendario = res.faixaDatas || [];
+    // O backend de /frequencias retorna { calendario, alunos: [...] }
+    stateBase.calendario = res.calendario || [];
     stateBase.alunos = res.alunos || [];
     stateBase.turma_id = turmaId;
 
