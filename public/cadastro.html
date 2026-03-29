@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão Escolar - Cadastro de Alunos e Turmas</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/login.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .cadastro-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 900px) {
+      .cadastro-container { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .drop-zone {
+      border: 2px dashed #CBD5E1;
+      border-radius: var(--radius);
+      padding: 3rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #F8FAFC;
+    }
+    .drop-zone:hover, .drop-zone.active {
+      border-color: var(--primary);
+      background: #F1F5F9;
+    }
+    .bulk-preview {
+      margin-top: 1.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--radius-sm);
+    }
+    .bulk-preview table { width:100%; border-collapse: collapse; font-size: 0.85rem; }
+    .bulk-preview th { position: sticky; top:0; background: #F1F5F9; padding: 0.5rem; text-align: left; }
+    .bulk-preview td { padding: 0.5rem; border-top: 1px solid #E2E8F0; }
+  </style>
+</head>
+<body class="bg-light">
+
+  <nav class="main-nav">
+    <div class="nav-content">
+      <div class="logo">📚 Gestão <span>Escolar</span></div>
+      <div class="nav-links">
+        <a href="frequencia.html" class="btn-ghost">Voltar ao Diário</a>
+        <button onclick="logout()" class="btn-outline">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-header" style="text-align:center; padding: 2rem 0;">
+    <h1>Configuração da Unidade</h1>
+    <p class="text-muted">Cadastre suas turmas e alunos para iniciar o controle de frequência.</p>
+  </header>
+
+  <main class="cadastro-container">
+    
+    <!-- LADO ESQUERDA: CADASTRO DE TURMA -->
+    <section class="card">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1.5rem;">
+        <span style="font-size:1.5rem;">🏫</span>
+        <h2 style="margin:0;">1. Cadastrar Nova Turma</h2>
+      </div>
+      <form id="formTurma">
+        <div class="form-group">
+          <label>Nome da Turma (Ex: 7º Ano A)</label>
+          <input type="text" id="turmaNome" placeholder="Ex: 9º Ano B" required>
+        </div>
+        <div class="form-group">
+          <label>Período</label>
+          <select id="turmaPeriodo">
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+            <option value="Integral">Integral</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Dias de Aula (Padrão: Seg-Sex)</label>
+          <input type="text" id="turmaDias" value="seg,ter,qua,qui,sex" placeholder="seg,ter,qua,qui,sex (Sem abreviações diferentes)">
+        </div>
+        <button type="submit" class="btn-primary w-full">Criar Turma e Calendário</button>
+      </form>
+      <div id="turmaMsg" style="margin-top:1rem; display:none;"></div>
+    </section>
+
+    <!-- LADO DIREITA: CADASTRO DE ALUNOS (MANUAL OU BULK) -->
+    <section class="card">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1.5rem;">
+        <span style="font-size:1.5rem;">👥</span>
+        <h2 style="margin:0;">2. Incluir Alunos</h2>
+      </div>
+
+      <div class="form-group">
+        <label>Selecione a Turma Destino</label>
+        <select id="selectTurmaAlunos" required>
+          <option value="">Carregando turmas...</option>
+        </select>
+      </div>
+
+      <div class="tabs" style="margin-bottom: 1rem; display:flex; gap:1rem; border-bottom:1px solid #EEE; padding-bottom:0.5rem;">
+        <button class="btn-tab active" data-tab="manual" onclick="switchTab('manual')">Manual</button>
+        <button class="btn-tab" data-tab="bulk" onclick="switchTab('bulk')">Importar Excel/CSV</button>
+      </div>
+
+      <!-- FORM MANUAL -->
+      <div id="tabManual">
+        <form id="formAluno">
+          <div class="form-group">
+            <label>Nome Completo do Aluno</label>
+            <input type="text" id="alunoNome" placeholder="Ex: João da Silva" required>
+          </div>
+          <div class="form-group">
+            <label>WhatsApp do Responsável (DDD + Número)</label>
+            <input type="text" id="alunoZap" placeholder="Ex: 11988887777">
+          </div>
+          <button type="submit" class="btn-primary w-full">Adicionar Aluno</button>
+        </form>
+      </div>
+
+      <!-- FORM BULK -->
+      <div id="tabBulk" style="display:none;">
+        <div class="drop-zone" id="dropZone">
+          <p>Arraste sua planilha aqui ou <strong>clique para buscar</strong></p>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Suporta .csv ou .xlsx</span>
+          <input type="file" id="fileInput" accept=".csv, .xlsx" style="display:none;">
+        </div>
+        <div style="margin-top:0.8rem; text-align:right;">
+          <a href="#" onclick="downloadModelo()" style="font-size:0.85rem; color:var(--primary); text-decoration:none;">📥 Baixar Modelo de Planilha</a>
+        </div>
+        
+        <div id="previewArea" style="display:none;">
+          <div class="bulk-preview">
+            <table id="tablePreview">
+              <thead><tr><th>Nome</th><th>WhatsApp</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <button id="btnSalvarBulk" class="btn-primary w-full" style="margin-top:1rem;">Confirmar Importação de <span id="bulkCount">0</span> alunos</button>
+        </div>
+      </div>
+
+      <div id="alunoMsg" style="margin-top:1rem; display:none;"></div>
+    </section>
+
+  </main>
+
+  <!-- Bibliotecas externas -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <script src="./js/api.v2.js"></script>
+  <script src="./js/cadastro.js"></script>
+</body>
+</html>

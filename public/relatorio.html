@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão Escolar - Diário Semanal (Back)</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/excel.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .semanal-grid th { background: #FDE047 !important; color: #854D0E !important; } /* Cor amarela pastel para o "Back" */
+    .btn-periodo { padding: 0.5rem 1rem; border: 1px solid #DDD; border-radius: 4px; background: white; cursor: pointer; }
+    .btn-periodo.active { background: var(--primary); color: white; border-color: var(--primary); }
+    
+    .cell-P { background: #DCFCE7; color: #166534; font-weight: 700; }
+    .cell-F { background: #FEE2E2; color: #991B1B; font-weight: 700; }
+    .cell-J { background: #FEF3C7; color: #92400E; font-weight: 700; }
+  </style>
+</head>
+<body class="bg-light">
+
+  <nav class="main-nav">
+    <div class="nav-content">
+      <div class="logo">📚 Diário <span>Semanal</span></div>
+      <div class="nav-links">
+        <a href="frequencia.html" class="btn-ghost">Voltar ao Diário Mensal</a>
+        <button onclick="window.print()" class="btn-outline">🖨️ Imprimir</button>
+      </div>
+    </div>
+  </nav>
+
+  <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    <div class="card" style="margin-bottom: 2rem; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 id="tituloRelatorio">Relatório Semanal de Frequência</h2>
+        <p class="text-muted" id="subtituloRelatorio">Selecione a turma e o período abaixo</p>
+      </div>
+      <div style="display:flex; gap:0.5rem;">
+        <select id="relatorioTurma" class="select-modern" onchange="carregarRelatorio()"></select>
+        <input type="date" id="relatorioDataInicio" class="input-modern" onchange="carregarRelatorio()">
+      </div>
+    </div>
+
+    <div id="relatorioContainer" class="card" style="padding:0; overflow-x: auto;">
+      <!-- A tabela será injetada aqui -->
+      <div style="padding: 3rem; text-align: center; color: var(--text-muted);">Aguardando seleção de turma...</div>
+    </div>
+  </main>
+
+  <script src="./js/api.v2.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        await window.initSupabase();
+        
+        // Data de hoje (Início da semana)
+        const hoje = new Date();
+        const seg = new Date(hoje.setDate(hoje.getDate() - hoje.getDay() + 1)).toISOString().split('T')[0];
+        document.getElementById('relatorioDataInicio').value = seg;
+
+        await popularTurmas();
+    });
+
+    async function popularTurmas() {
+        const escolaId = '77777777-7777-7777-7777-777777777777';
+        const res = await apiFetch(`/turmas?escola_id=${escolaId}`);
+        const select = document.getElementById('relatorioTurma');
+        select.innerHTML = res.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+        if(res.length > 0) carregarRelatorio();
+    }
+
+    async function carregarRelatorio() {
+        const turmaId = document.getElementById('relatorioTurma').value;
+        const dataInicioStr = document.getElementById('relatorioDataInicio').value;
+        const container = document.getElementById('relatorioContainer');
+
+        if(!turmaId) return;
+
+        // Calcular fim da semana (Sexta)
+        const d = new Date(dataInicioStr + "T12:00:00");
+        const fim = new Date(d);
+        fim.setDate(d.getDate() + 4);
+        const dataFimStr = fim.toISOString().split('T')[0];
+
+        container.innerHTML = `<div style="padding: 3rem; text-align: center;">Gerando matriz semanal...</div>`;
+
+        try {
+            const res = await apiFetch(`/relatorios/semanal?turma_id=${turmaId}&data_inicio=${dataInicioStr}&data_fim=${dataFimStr}`);
+            renderizarRelatorio(res);
+        } catch (e) {
+            container.innerHTML = `<div style="padding: 2rem; color:red;">Erro: ${e.message}</div>`;
+        }
+    }
+
+    function renderizarRelatorio(data) {
+        const { calendario, matriz } = data;
+        const container = document.getElementById('relatorioContainer');
+
+        if (matriz.length === 0) {
+            container.innerHTML = `<div style="padding: 3rem; text-align: center;">Nenhum aluno cadastrado nesta turma.</div>`;
+            return;
+        }
+
+        const table = `
+            <table class="excel-grid semanal-grid">
+                <thead>
+                    <tr>
+                        <th style="min-width: 250px;">Aluno</th>
+                        ${calendario.map(c => `<th>${new Date(c.data + "T12:00:00").toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}<br><small>${['Dom','Seg','Ter','Qua','Qui','Sex','Sab'][new Date(c.data + "T12:00:00").getDay()]}</small></th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${matriz.map(row => `
+                        <tr>
+                            <td class="aluno-nome">${row.nome}</td>
+                            ${calendario.map(c => {
+                                const status = row.semana[c.data] || '-';
+                                let cellClass = '';
+                                if(status === 'P') cellClass = 'cell-P';
+                                if(status === 'F') cellClass = 'cell-F';
+                                if(status === 'J') cellClass = 'cell-J';
+                                return `<td class="${cellClass}" style="text-align:center;">${status}</td>`;
+                            }).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        container.innerHTML = table;
+    }
+  </script>
+</body>
+</html>

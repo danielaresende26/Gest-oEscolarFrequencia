@@ -1,8 +1,19 @@
-const supabase = require('../models/supabaseClient');
+const relatorioService = require('../services/relatorioService');
 
-exports.obterPorTurma = async (req, res) => {
-  // Retorna % média de faltas de uma turma
-  res.json({ message: 'Relatório por turma em construção' });
+exports.obterSemanal = async (req, res) => {
+  try {
+    const { turma_id, data_inicio, data_fim } = req.query;
+    
+    if (!turma_id || !data_inicio || !data_fim) {
+      return res.status(400).json({ error: 'turma_id, data_inicio e data_fim são obrigatórios.' });
+    }
+
+    const report = await relatorioService.gerarMatrizSemanal(turma_id, data_inicio, data_fim);
+    res.json(report);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao gerar matriz semanal', details: err.message });
+  }
 };
 
 exports.obterPorAluno = async (req, res) => {

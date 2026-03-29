@@ -57,3 +57,21 @@ exports.listarPorTurma = async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar alunos', details: err.message });
   }
 };
+exports.criarBulk = async (req, res) => {
+  try {
+    const { alunos } = req.body;
+    if (!alunos || alunos.length === 0) return res.status(400).json({ error: 'Lista de alunos vazia.' });
+
+    // Inserir Alunos (o Supabase aceita array para insert múltiplo)
+    const { data, error } = await supabase
+      .from('alunos')
+      .insert(alunos.map(a => ({ turma_id: a.turma_id, nome: a.nome })))
+      .select();
+
+    if (error) throw error;
+    res.json({ message: `${data.length} alunos importados com sucesso.`, alunos: data });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao importar alunos', details: err.message });
+  }
+};

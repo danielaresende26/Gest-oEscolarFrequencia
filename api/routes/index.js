@@ -19,6 +19,7 @@ router.get('/turmas', turmaController.listarPorEscola);
 
 // --- Alunos ---
 router.post('/alunos', alunoController.criar);
+router.post('/alunos/bulk', alunoController.criarBulk);
 router.get('/alunos', alunoController.listarPorTurma);
 
 // --- Frequência ---
@@ -31,6 +32,7 @@ router.post('/calendario/reuniao', calendarioController.marcarReuniao);
 router.post('/calendario/recesso', calendarioController.marcarRecesso);
 
 // --- Relatórios e Analytics ---
+router.get('/relatorios/semanal', relatorioController.obterSemanal);
 router.get('/relatorios/turma', relatorioController.obterPorTurma);
 router.get('/relatorios/aluno', relatorioController.obterPorAluno);
 router.get('/relatorios/dias-criticos', relatorioController.diasCriticos);
