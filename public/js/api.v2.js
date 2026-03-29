@@ -82,12 +82,19 @@ async function initAdminNav(client) {
       const navEquipe = document.getElementById('navEquipe');
       if (navEquipe) {
         if (userData.perfil === 'admin') {
+          // Já está visível no HTML, garantimos que permaneça
           navEquipe.style.display = 'inline-block';
-          console.log("👑 Menu EQUIPE habilitado.");
+          console.log("👑 Menu EQUIPE confirmado para Admin.");
         } else {
-          console.log("🚫 Menu EQUIPE bloqueado para professores.");
+          // Se for Professor, removemos agressivamente
+          navEquipe.style.display = 'none';
+          console.log("🚫 Menu EQUIPE removido para Professor.");
         }
       }
+    } else {
+       // Se não tem userData e falhou auto-vincular, oculta por segurança
+       const navEquipe = document.getElementById('navEquipe');
+       if (navEquipe) navEquipe.style.display = 'none';
     }
   } catch (err) {
     console.error("💥 Erro fatal no initAdminNav:", err);
