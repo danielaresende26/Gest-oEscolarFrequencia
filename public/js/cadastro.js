@@ -7,10 +7,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Iniciar Supabase (pelo api.v2.js)
     await window.initSupabase();
     
-    // 2. Tentar descobrir a escola logada. 
-    // Em produção pegaria do User metadata/session. Aqui simulando Escola Global de teste.
-    // Futuro: GET /api/me para pegar escola_id do usuario logado.
-    escolaId = '77777777-7777-7777-7777-777777777777'; 
+    // 2. Tentar descobrir a escola logada consultando o banco
+    const client = await window.initSupabase();
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return window.location.href = 'index.html';
+    
+    const { data: userData } = await client.from('usuarios').select('escola_id').eq('id', user.id).single();
+    if (!userData || !userData.escola_id) {
+        alert("Sua conta ainda não está vinculada a nenhuma escola! Configure no Supabase.");
+        return;
+    }
+    escolaId = userData.escola_id; 
 
     await carregarTurmas();
     initBulkHandlers();

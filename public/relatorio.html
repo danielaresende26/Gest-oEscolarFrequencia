@@ -61,7 +61,17 @@
     });
 
     async function popularTurmas() {
-        const escolaId = '77777777-7777-7777-7777-777777777777';
+        const client = await window.initSupabase();
+        const { data: { user } } = await client.auth.getUser();
+        if(!user) return;
+
+        const { data: userData } = await client.from('usuarios').select('escola_id').eq('id', user.id).single();
+        if (!userData || !userData.escola_id) {
+            document.getElementById('relatorioContainer').innerHTML = `<div style="padding: 3rem; text-align: center;">Vincule sua conta a uma escola no Supabase primeiro.</div>`;
+            return;
+        }
+
+        const escolaId = userData.escola_id;
         const res = await apiFetch(`/turmas?escola_id=${escolaId}`);
         const select = document.getElementById('relatorioTurma');
         select.innerHTML = res.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
