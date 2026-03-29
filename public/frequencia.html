@@ -98,20 +98,47 @@
          return;
       }
 
+      // 1. Verificar Sessão
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         window.location.href = './index.html';
         return;
       }
-      
-      // Aqui faríamos uma busca pelas turmas do professor vinculado
-      // Por enquanto, carrega de forma mockada para a UI funcionar
-      document.getElementById('turmaSelect').innerHTML = `
-        <option value="123e4567-e89b-12d3-a456-426614174000">7º Ano A</option>
-        <option value="987e6543-e21b-12d3-a456-426614174001">8º Ano B</option>
-      `;
 
-      carregarGrade();
+      try {
+        // 2. Buscar Perfil e Escola
+        const { data: userData } = await supabaseClient
+          .from('usuarios')
+          .select('nome, escola_id')
+          .eq('id', session.user.id)
+          .single();
+
+        if (userData) {
+          document.getElementById('userName').innerText = `Professor(a) ${userData.nome.split(' ')[0]}`;
+          
+          // 3. Buscar Turmas da Escola
+          const turmas = await apiFetch(`/turmas?escola_id=${userData.escola_id}`);
+          
+          if (turmas.length > 0) {
+            document.getElementById('turmaSelect').innerHTML = turmas.map(t => 
+              `<option value="${t.id}">${t.nome} (${t.periodo})</option>`
+            ).join('');
+            
+            // 4. Carregar Grade da Primeira Turma
+            carregarGrade();
+          } else {
+            document.getElementById('turmaSelect').innerHTML = '<option value="">Crie uma turma na Gestão</option>';
+            document.getElementById('gridContainer').innerHTML = `
+              <div class="glass-panel" style="padding: 2rem; text-align: center;">
+                <h3>Nenhuma turma encontrada.</h3>
+                <p>Acesse a aba ⚙️ Gestão no topo para cadastrar sua primeira turma.</p>
+              </div>`;
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao carregar dados:", e);
+        document.getElementById('turmaSelect').innerHTML = '<option value="">Erro ao carregar</option>';
+      }
     }
 
     function logout() {
