@@ -11,10 +11,24 @@ let supabaseClient = null;
  */
 window.initSupabase = async function() {
   if (supabaseClient) return supabaseClient;
+
+  // Pequeno Wait/Retry para garantir que o script do CDN carregou o objeto global
+  let retries = 0;
+  while (!window.supabase && retries < 10) {
+    await new Promise(r => setTimeout(r, 200));
+    retries++;
+  }
+
+  if (!window.supabase) {
+    console.error("Erro critico: Objeto 'supabase' não encontrado no window após 2 segundos.");
+    return null;
+  }
+
   try {
     const res = await fetch(`${API_BASE_URL}/config`);
     const config = await res.json();
     supabaseClient = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_KEY);
+    console.log("✅ Supabase Client inicializado com sucesso.");
     return supabaseClient;
   } catch(e) {
     console.error("Erro critico: Não conseguiu buscar de /api/config", e);
