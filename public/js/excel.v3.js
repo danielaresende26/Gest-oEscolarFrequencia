@@ -39,24 +39,23 @@ async function carregarGrade() {
   container.innerHTML = `<div style="padding: 2rem; text-align: center;">Buscando dados da matriz de frequência...</div>`;
 
   try {
-    // 1. Simular uma requisição ou usar requisição real. 
-    // Em Produção será: const res = await apiFetch(`/frequencias?turma_id=${turmaId}&mes=${mes}&ano=${ano}`);
-    // stateBase = res;
+    // 1. Chamada real para obter a matriz mensal consolidada
+    const res = await apiFetch(`/relatorios/semanal?turma_id=${turmaId}&mes=${mes}&ano=${ano}`);
     
-    // COMO NÃO TEMOS CONEXÃO VERDADEIRA AINDA AQUI NO FRONT JS MOCKAMOS PARA A UI MOSTRAR O RESULTADO PERFEITO.
-    // === MOCK DATA VIEW ===
-    stateBase.calendario = Array.from({length: 22}).map((_, i) => ({
-      id: `cal-uuid-${i}`,
-      data: `${ano}-${String(mes).padStart(2, '0')}-${String(i+1).padStart(2,'0')}`,
-      tipo: [0, 6].includes(new Date(`${ano}-${String(mes).padStart(2, '0')}-${String(i+1).padStart(2,'0')}T00:00:00`).getDay()) ? 'fim_de_semana' : 'aula'
-    }));
+    // O backend de relatorios/semanal retorna { faixaDatas, alunos: [...] }
+    // Precisamos adaptar o stateBase para o renderGrid
+    stateBase.calendario = res.faixaDatas || [];
+    stateBase.alunos = res.alunos || [];
+    stateBase.turma_id = turmaId;
 
-    stateBase.alunos = [
-      { id: 'uuid-aluno1', nome: 'João Silva', frequencia_por_data: {} },
-      { id: 'uuid-aluno2', nome: 'Maria Oliveira', frequencia_por_data: {} },
-      { id: 'uuid-aluno3', nome: 'Pedro Souza', frequencia_por_data: {} }
-    ];
-    // === FIM DO MOCK ===
+    if (stateBase.alunos.length === 0) {
+      container.innerHTML = `
+        <div class="glass-panel" style="padding: 2rem; text-align: center;">
+          <h3>Ainda não há alunos nesta turma.</h3>
+          <p>Cadastre alunos na aba ⚙️ Gestão para iniciar a chamada.</p>
+        </div>`;
+      return;
+    }
 
     renderGrid();
 
@@ -204,7 +203,7 @@ function recalcularTotaisLocais() {
   });
 }
 
-function salvarGrade() {
+async function salvarGrade() {
   const btn = document.getElementById('btnSave');
   btn.innerText = 'Salvando...';
   
@@ -223,9 +222,12 @@ function salvarGrade() {
     });
   });
 
-  // Simulando sucesso da chamada 
-  setTimeout(() => {
-    console.log("PAYLOAD PRONTO PARA VERCEL:", frequenciasParaSalvar);
+  try {
+    const res = await apiFetch('/frequencias/lote', {
+      method: 'POST',
+      body: JSON.stringify({ frequencias: frequenciasParaSalvar })
+    });
+    
     btn.innerHTML = `
       <svg style="width:16px;height:16px" viewBox="0 0 24 24">
         <path fill="currentColor" d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 2l-6-6h4V3h4v5h4l-6 6z"/>
@@ -235,7 +237,12 @@ function salvarGrade() {
     setTimeout(() => {
        btn.innerText = 'Salvar Alterações';
     }, 2000);
-  }, 1000);
+
+  } catch (error) {
+    console.error(error);
+    btn.innerText = 'Erro ao salvar';
+    setTimeout(() => { btn.innerText = 'Salvar Alterações'; }, 3000);
+  }
 }
 
 // Inicia automático se já não estiver em login page
