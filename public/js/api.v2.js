@@ -101,6 +101,9 @@ async function initAdminNav(client) {
   }
 }
 
+// Marca de versão para debugging de Cache da Vercel
+console.log("🚀 Sistema Gestão Escolar v2.1 Carregado. Se você não vê o botão Equipe, dê um Ctrl + F5.");
+
 /**
  * Faz requisições ao Backend Node autenticando com token Supabase
  */
