@@ -105,6 +105,43 @@ async function initAdminNav(client) {
 console.log("🚀 Sistema Gestão Escolar v2.1 Carregado. Se você não vê o botão Equipe, dê um Ctrl + F5.");
 
 /**
+ * Função de Emergência: Promover o usuário logado para ADMIN caso o banco esteja dessincronizado.
+ * Ativada ao clicar na bolinha verde do rodapé.
+ */
+async function forcarAdmin() {
+  try {
+    const client = await window.initSupabase();
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return alert("Por favor, faça login primeiro.");
+
+    const { error } = await client.from('usuarios').update({ perfil: 'admin' }).eq('id', user.id);
+    if (!error) {
+       alert("🎉 Perfil promovido a Administrador! Por favor, atualize a página.");
+       window.location.reload();
+    } else {
+       console.error("Erro na promoção:", error);
+       alert("Erro ao promover perfil. Verifique o console.");
+    }
+  } catch(e) {
+    alert("Falha técnica: " + e.message);
+  }
+}
+
+// Vincula o clique na bolinha verde do rodapé (configurado via ID ou seletor de span)
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const dots = document.querySelectorAll('footer span');
+    dots.forEach(d => {
+       if (d.style.color === 'rgb(16, 185, 129)' || d.innerText === '●') {
+         d.style.cursor = 'pointer';
+         d.onclick = forcarAdmin;
+         d.title = "Clique aqui para restaurar poderes de Admin";
+       }
+    });
+  }, 2000);
+});
+
+/**
  * Faz requisições ao Backend Node autenticando com token Supabase
  */
 async function apiFetch(endpoint, options = {}) {
