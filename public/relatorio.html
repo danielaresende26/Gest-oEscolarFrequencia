@@ -29,6 +29,7 @@
       <a href="equipe.html?v=3" id="navEquipe" class="btn-ghost" title="Gerenciar Equipe" style="display:none;">👥 Equipe</a>
       <a href="cadastro.html" class="btn-ghost">⚙️ Gestão</a>
       <span id="userName" class="user-info">Carregando...</span>
+      <button onclick="exportarExcel()" class="btn-outline">📊 Excel</button>
       <button onclick="window.print()" class="btn-outline">🖨️ Imprimir</button>
       <button onclick="logout()" class="btn-outline">Sair</button>
     </div>
@@ -54,12 +55,46 @@
   <footer style="text-align:center; padding: 2rem; color: #94A3B8; font-size: 0.8rem;">
     Gestão Escolar &copy; 2026 - Versão 2.1 <span style="color:#10B981">●</span>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0/dist/umd/supabase.js"></script>
   <script>
+    let ultimoDadosRelatorio = null;
+
     function logout() {
       supabaseClient.auth.signOut().then(() => {
         window.location.href = 'index.html';
       });
+    }
+
+    /**
+     * Gera e faz o download de uma planilha Excel com base no relatório atual.
+     */
+    function exportarExcel() {
+      if (!ultimoDadosRelatorio) return alert("Gere um relatório primeiro!");
+
+      const { calendario, matriz } = ultimoDadosRelatorio;
+      const turmaNome = document.getElementById('relatorioTurma').options[document.getElementById('relatorioTurma').selectedIndex].text;
+      
+      // 1. Preparar cabeçalho
+      const headers = ["Aluno", ...calendario.map(c => new Date(c.data + "T12:00:00").toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}))];
+      
+      // 2. Preparar linhas de dados
+      const rows = matriz.map(aluno => {
+        const rowData = [aluno.nome];
+        calendario.forEach(dia => {
+          rowData.push(aluno.semana[dia.data] || '-');
+        });
+        return rowData;
+      });
+
+      // 3. Criar WorkSheet
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Frequência");
+
+      // 4. Salvar arquivo
+      const dataInicio = document.getElementById('relatorioDataInicio').value;
+      XLSX.writeFile(wb, `Relatorio_Semanal_${turmaNome}_${dataInicio}.xlsx`);
     }
   </script>
   <script src="./js/api.v3.js"></script>
@@ -117,6 +152,7 @@
     }
 
     function renderizarRelatorio(data) {
+        ultimoDadosRelatorio = data; // Armazena para exportação
         const { calendario, matriz } = data;
         const container = document.getElementById('relatorioContainer');
 
@@ -154,5 +190,7 @@
         container.innerHTML = table;
     }
   </script>
+</body>
+</html>
 </body>
 </html>
