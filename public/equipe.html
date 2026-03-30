@@ -112,9 +112,10 @@
             <td>${m.email || 'Acesso Direto'}</td>
             <td><span class="badge ${m.perfil === 'admin' ? 'bg-primary' : 'bg-light'}">${m.perfil.toUpperCase()}</span></td>
             <td style="text-align:right;">
-              <button class="btn-outline btn-sm danger" 
-                      ${m.id === userId ? 'disabled title="Você não pode se auto-excluir"' : ''}
-                      onclick="removerMembro('${m.id}')">Excluir</button>
+              ${m.perfil === 'admin' 
+                ? '<span style="color:#94A3B8; font-size:0.8rem;">Protegido</span>'
+                : `<button class="btn-outline btn-sm danger" onclick="removerMembro('${m.id}')">Excluir</button>`
+              }
             </td>
           </tr>
         `).join('');
