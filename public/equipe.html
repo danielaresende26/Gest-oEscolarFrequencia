@@ -10,21 +10,21 @@
 </head>
 <body class="bg-light">
 
-  <nav class="main-nav">
-    <div class="nav-content">
-      <div class="logo">👥 Gestão de <span>Equipe</span></div>
-      <div class="nav-links" id="adminNav">
-        <a href="frequencia.html" class="btn-ghost">Diário</a>
-        <a href="cadastro.html" class="btn-ghost">Gestão</a>
-        <button onclick="logout()" class="btn-outline">Sair</button>
-      </div>
+  <header>
+    <div class="brand">
+      <span>👥</span> Gestão de Equipe
     </div>
-  </nav>
+    <div class="nav-links">
+      <a href="frequencia.html" class="btn-ghost" title="Voltar ao Diário">📅 Diário</a>
+      <a href="cadastro.html" class="btn-ghost" title="Voltar à Gestão">⚙️ Gestão</a>
+      <button onclick="logout()" class="btn-outline">Sair</button>
+    </div>
+  </header>
 
-  <header class="page-header" style="text-align:center; padding: 2rem 0;">
+  <div class="page-header" style="text-align:center; padding: 2rem 0;">
     <h1>Membros da Unidade</h1>
     <p class="text-muted">Adicione professores e administradores para gerenciar a escola.</p>
-  </header>
+  </div>
 
   <main class="cadastro-container" style="max-width: 1200px; margin: 0 auto; padding: 0 1rem; display: grid; grid-template-columns: 350px 1fr; gap: 2rem;">
     
