@@ -80,16 +80,19 @@ async function initAdminNav(client) {
       if (userNameEl) userNameEl.innerText = userData.nome;
 
       const navEquipe = document.getElementById('navEquipe');
+      const navDash = document.getElementById('navDash');
       const navLinks = document.querySelector('.nav-links');
 
       if (userData.perfil === 'admin') {
         console.log("👑 Perfil ADMIN confirmado.");
         
-        // Mostrar Equipe se houver o ID
-        if (navEquipe) navEquipe.style.display = 'inline-block';
-
-        // Injetar Dashboard se não existir
-        if (navLinks && !document.getElementById('navDash')) {
+        if (navEquipe) navEquipe.style.display = 'inline-flex';
+        
+        // Se o link do Dashboard já existe no HTML (recomendado), apenas mostra
+        if (navDash) {
+          navDash.style.display = 'inline-flex';
+        } else if (navLinks) {
+          // Fallback: Injetar se não existir no HTML
           const dashLink = document.createElement('a');
           dashLink.href = 'dashboard.html';
           dashLink.id = 'navDash';
@@ -99,15 +102,10 @@ async function initAdminNav(client) {
           navLinks.prepend(dashLink);
         }
       } else {
-        console.log("🚫 Perfil PROFESSOR. Removendo acessos admin.");
+        console.log("🚫 Perfil PROFESSOR. Mantendo acessos admin ocultos.");
         if (navEquipe) navEquipe.style.display = 'none';
-        const navDash = document.getElementById('navDash');
-        if (navDash) navDash.remove();
+        if (navDash) navDash.style.display = 'none';
       }
-    } else {
-       // Se não tem userData e falhou auto-vincular, oculta por segurança
-       const navEquipe = document.getElementById('navEquipe');
-       if (navEquipe) navEquipe.style.display = 'none';
     }
   } catch (err) {
     console.error("💥 Erro fatal no initAdminNav:", err);

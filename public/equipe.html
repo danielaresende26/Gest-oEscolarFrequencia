@@ -12,11 +12,14 @@
 
   <header>
     <div class="brand">
-      <span>👥</span> Gestão de Equipe
+      <span>👥</span> Equipe
     </div>
     <div class="nav-links">
-      <a href="frequencia.html" class="btn-ghost" title="Voltar ao Diário">📅 Diário</a>
-      <a href="cadastro.html" class="btn-ghost" title="Voltar à Gestão">⚙️ Gestão</a>
+      <a href="dashboard.html" id="navDash" class="btn-ghost" style="display:none;" title="Painel Analítico">📊 Dashboard</a>
+      <a href="frequencia.html" class="btn-ghost">📅 Frequências</a>
+      <a href="cadastro.html" class="btn-ghost">⚙️ Gestão</a>
+      <a href="relatorio.html" class="btn-ghost">📆 Semanal</a>
+      <span id="userName" class="user-info">Carregando...</span>
       <button onclick="logout()" class="btn-outline">Sair</button>
     </div>
   </header>

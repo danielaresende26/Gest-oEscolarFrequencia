@@ -21,11 +21,14 @@
 
   <header>
     <div class="brand">
-      <span>📚</span> Diário Semanal
+      <span>📆</span> Relatórios
     </div>
     <div class="nav-links">
-      <a href="equipe.html?v=3" id="navEquipe" class="btn-ghost" title="Gerenciar Equipe">👥 Equipe</a>
-      <a href="frequencia.html" class="btn-ghost" title="Voltar ao Diário">📅 Diário</a>
+      <a href="dashboard.html" id="navDash" class="btn-ghost" style="display:none;" title="Painel Analítico">📊 Dashboard</a>
+      <a href="frequencia.html" class="btn-ghost">📅 Frequências</a>
+      <a href="equipe.html?v=3" id="navEquipe" class="btn-ghost" title="Gerenciar Equipe" style="display:none;">👥 Equipe</a>
+      <a href="cadastro.html" class="btn-ghost">⚙️ Gestão</a>
+      <span id="userName" class="user-info">Carregando...</span>
       <button onclick="window.print()" class="btn-outline">🖨️ Imprimir</button>
       <button onclick="logout()" class="btn-outline">Sair</button>
     </div>
