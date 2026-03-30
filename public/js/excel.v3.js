@@ -1,7 +1,8 @@
 let stateBase = {
   calendario: [],
   alunos: [],
-  turma_id: null
+  turma_id: null,
+  semanaAtiva: "0" // "0" significa mês todo
 };
 
 // Mapeamento Status -> Próximo clique
@@ -32,6 +33,7 @@ async function carregarGrade() {
   const container = document.getElementById('gridContainer');
   const turmaId = document.getElementById('turmaSelect').value;
   const mes = document.getElementById('mesSelect').value;
+  const semanaSelect = document.getElementById('semanaSelect');
   const ano = new Date().getFullYear();
 
   if(!turmaId) return;
@@ -39,13 +41,25 @@ async function carregarGrade() {
   container.innerHTML = `<div style="padding: 2rem; text-align: center;">Buscando dados da matriz de frequência...</div>`;
 
   try {
-    // 1. Chamada real para obter a matriz mensal consolidada
     const res = await apiFetch(`/frequencias?turma_id=${turmaId}&mes=${mes}&ano=${ano}`);
     
-    // O backend de /frequencias retorna { calendario, alunos: [...] }
     stateBase.calendario = res.calendario || [];
     stateBase.alunos = res.alunos || [];
     stateBase.turma_id = turmaId;
+    
+    // Resetar seletor de semanas
+    stateBase.semanaAtiva = "0";
+    if (semanaSelect) {
+      semanaSelect.value = "0";
+      const totalDias = stateBase.calendario.length;
+      let optionsHtml = '<option value="0">Mês Inteiro (Full)</option>';
+      const numSemanas = Math.ceil(totalDias / 7);
+      
+      for (let i = 1; i <= numSemanas; i++) {
+        optionsHtml += `<option value="${i}">Semana ${i}</option>`;
+      }
+      semanaSelect.innerHTML = optionsHtml;
+    }
 
     if (stateBase.alunos.length === 0) {
       container.innerHTML = `
@@ -63,9 +77,24 @@ async function carregarGrade() {
   }
 }
 
+function alterarSemana() {
+  const select = document.getElementById('semanaSelect');
+  if (select) {
+    stateBase.semanaAtiva = select.value;
+    renderGrid();
+  }
+}
+
 function renderGrid() {
   const container = document.getElementById('gridContainer');
-  const { calendario, alunos } = stateBase;
+  const { calendario: fullCal, alunos, semanaAtiva } = stateBase;
+
+  // Filtrar Calendário se for por semana
+  let calendario = fullCal;
+  if (semanaAtiva !== "0") {
+     const idx = parseInt(semanaAtiva) - 1;
+     calendario = fullCal.slice(idx * 7, (idx + 1) * 7);
+  }
 
   const thead = `
     <thead>

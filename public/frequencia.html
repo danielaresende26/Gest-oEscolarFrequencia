@@ -48,6 +48,13 @@
             <option value="12">Dezembro</option>
           </select>
         </div>
+        <div class="form-group" style="margin: 0;">
+          <label>Exibição (Foco)</label>
+          <select id="semanaSelect" onchange="alterarSemana()">
+            <option value="0">Mês Inteiro (Full)</option>
+            <!-- Populado via JS -->
+          </select>
+        </div>
       </div>
       <div>
         <button class="btn btn-primary" onclick="salvarGrade()" id="btnSave">
