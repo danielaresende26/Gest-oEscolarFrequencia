@@ -14,6 +14,10 @@ const mainRoutes = require(path.join(__dirname, '../src/routes/index'));
 
 app.use('/api', mainRoutes);
 
+// Servir arquivos estáticos da pasta /public quando rodando localmente
+// Nota: Na Vercel, isso é tratado pelo vercel.json (rewrites)
+app.use(express.static(path.join(__dirname, '../public')));
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'API de Gestão Escolar rodando!', timestamp: new Date() });
 });

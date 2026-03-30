@@ -3,32 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Analítico - Gestão Escolar</title>
+  <title>Analytics - Gestão Escolar</title>
   <link rel="stylesheet" href="./css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     .grid-dashboard {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
       margin-top: 1.5rem;
     }
     .stat-card {
-      padding: 1.5rem;
-      border-radius: var(--radius);
-      background: white;
-      box-shadow: var(--shadow-sm);
-      border-left: 4px solid var(--primary);
+      transition: var(--transition);
+      border: 1px solid var(--border-glass);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
-    .stat-title { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; }
-    .stat-value { font-size: 2.5rem; font-weight: 700; color: var(--text-main); margin-top: 0.5rem; }
+    .stat-title { color: var(--text-muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;}
+    .stat-value { font-size: 2.8rem; font-weight: 800; color: var(--text-main); line-height: 1.1; margin-top: 0.5rem; }
     
     .chart-container {
       background: white;
       padding: 1.5rem;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      margin-top: 1.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-premium);
+      border: 1px solid var(--border-glass);
+    }
+    
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      border-bottom: 1px solid hsla(210, 40%, 94%, 1);
+      transition: var(--transition);
+    }
+    
+    .ranking-item:hover {
+      background: var(--bg-app);
+      border-radius: var(--radius-md);
     }
   </style>
 </head>
@@ -36,49 +50,74 @@
 
   <header>
     <div class="brand">
-      <span style="font-size: 1.5rem">📊</span> Dashboard Admin
+      <span>📊</span> Dashboard
     </div>
-    <div>
-      <span id="userNameDisplay">Diretor(a)</span>
-      <button onclick="window.location.href='./frequencia.html'" class="btn btn-outline" style="margin-left: 1rem;">Ir para Frequências</button>
+    <div class="nav-links">
+      <a href="frequencia.html" class="btn-ghost">📅 Frequências</a>
+      <a href="cadastro.html" class="btn-ghost">⚙️ Gestão</a>
+      <a href="equipe.html" id="navEquipe" class="btn-ghost" style="display:none">👥 Equipe</a>
+      <span id="userName" class="user-info">Carregando...</span>
+      <button onclick="logout()" class="btn-outline">Sair</button>
     </div>
   </header>
 
   <main>
-    <h2>Visão Geral da Escola</h2>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+        <div>
+            <h1 style="font-size: 2rem; font-weight: 800;">Visão Geral da Unidade</h1>
+            <p style="color: var(--text-muted)">Dados consolidados do mês atual</p>
+        </div>
+        <button class="btn btn-outline" onclick="location.reload()">
+           <svg style="width:16px;height:16px" viewBox="0 0 24 24"><path fill="currentColor" d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/></svg>
+           Atualizar Dados
+        </button>
+    </div>
     
     <div class="grid-dashboard">
-      <div class="stat-card" style="border-left-color: var(--danger-text);">
+      <div class="glass-panel stat-card" style="border-left: 6px solid var(--danger);">
         <div class="stat-title">Alunos em Risco (< 75%)</div>
         <div class="stat-value" id="valRisco">--</div>
       </div>
-      <div class="stat-card">
+      <div class="glass-panel stat-card" style="border-left: 6px solid var(--primary);">
         <div class="stat-title">Turmas Ativas</div>
         <div class="stat-value" id="valTurmas">--</div>
       </div>
-      <div class="stat-card" style="border-left-color: var(--secondary);">
+      <div class="glass-panel stat-card" style="border-left: 6px solid var(--secondary);">
         <div class="stat-title">Dia Crítico Semanal</div>
-        <div class="stat-value" id="valDiaCritico" style="font-size: 1.8rem">--</div>
+        <div class="stat-value" id="valDiaCritico" style="font-size: 1.6rem">--</div>
       </div>
     </div>
 
-    <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
+    <div class="grid-dashboard" style="grid-template-columns: 1.8fr 1.2fr;">
       <div class="chart-container">
-        <h3>Padrão de Faltas por Dia da Semana</h3>
-        <canvas id="faltasChart" height="100"></canvas>
+        <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Distribuição de Faltas por Dia</h3>
+        <canvas id="faltasChart" height="120"></canvas>
       </div>
 
-      <div class="chart-container" style="overflow-y: auto; max-height: 400px;">
-        <h3 style="color: var(--danger-text)">Ranking de Faltas</h3>
-        <ul id="rankingList" style="list-style: none; margin-top: 1rem; padding: 0;">
+      <div class="chart-container" style="overflow-y: auto; max-height: 480px;">
+        <h3 style="color: var(--danger); font-weight: 700; margin-bottom: 1rem;">Ranking de Ausências</h3>
+        <div id="rankingList">
           <!-- Injetado via JS -->
-        </ul>
+          <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Carregando ranking...</p>
+        </div>
       </div>
     </div>
 
   </main>
 
-  <script src="./js/api.js"></script>
+  <footer>
+    Gestão Escolar Premium &copy; 2026 - Analítico Administrativo <span style="color:var(--primary)">●</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0/dist/umd/supabase.js"></script>
+  <script src="./js/api.v3.js"></script>
   <script src="./js/dashboard.js"></script>
+  <script>
+    async function logout() {
+       const client = await window.initSupabase();
+       await client.auth.signOut();
+       window.location.href = './index.html';
+    }
+  </script>
 </body>
 </html>

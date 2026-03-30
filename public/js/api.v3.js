@@ -80,16 +80,29 @@ async function initAdminNav(client) {
       if (userNameEl) userNameEl.innerText = userData.nome;
 
       const navEquipe = document.getElementById('navEquipe');
-      if (navEquipe) {
-        if (userData.perfil === 'admin') {
-          // Já está visível no HTML, garantimos que permaneça
-          navEquipe.style.display = 'inline-block';
-          console.log("👑 Menu EQUIPE confirmado para Admin.");
-        } else {
-          // Se for Professor, removemos agressivamente
-          navEquipe.style.display = 'none';
-          console.log("🚫 Menu EQUIPE removido para Professor.");
+      const navLinks = document.querySelector('.nav-links');
+
+      if (userData.perfil === 'admin') {
+        console.log("👑 Perfil ADMIN confirmado.");
+        
+        // Mostrar Equipe se houver o ID
+        if (navEquipe) navEquipe.style.display = 'inline-block';
+
+        // Injetar Dashboard se não existir
+        if (navLinks && !document.getElementById('navDash')) {
+          const dashLink = document.createElement('a');
+          dashLink.href = 'dashboard.html';
+          dashLink.id = 'navDash';
+          dashLink.className = 'btn-ghost';
+          dashLink.title = 'Painel Analítico de Gestão';
+          dashLink.innerHTML = '📊 Dashboard';
+          navLinks.prepend(dashLink);
         }
+      } else {
+        console.log("🚫 Perfil PROFESSOR. Removendo acessos admin.");
+        if (navEquipe) navEquipe.style.display = 'none';
+        const navDash = document.getElementById('navDash');
+        if (navDash) navDash.remove();
       }
     } else {
        // Se não tem userData e falhou auto-vincular, oculta por segurança

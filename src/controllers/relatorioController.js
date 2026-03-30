@@ -30,19 +30,14 @@ exports.dashboard = async (req, res) => {
   try {
     const { escola_id } = req.query;
     
-    // Simulação do resultado de ranking de alunos de risco
-    // Futuro: Query complexa ao banco ou view agregada analítica
-    res.json({
-      alunosRisco: [
-        { nome: 'João Pedro', turma: '7° B', faltasPct: 35 },
-        { nome: 'Maria Clara', turma: '8° A', faltasPct: 28 }
-      ],
-      diasCriticos: [
-        { diaSemana: 'Sexta-feira', totalFaltasHistorico: 120, alerta: true },
-        { diaSemana: 'Segunda-feira', totalFaltasHistorico: 98, alerta: false }
-      ]
-    });
+    if (!escola_id) {
+      return res.status(400).json({ error: 'escola_id é necessário para o dashboard.' });
+    }
+
+    const data = await relatorioService.gerarDadosDashboard(escola_id);
+    res.json(data);
   } catch (err) {
+    console.error('Erro no Controller Dashboard:', err);
     res.status(500).json({ error: 'Erro ao montar dashboard', details: err.message });
   }
 };

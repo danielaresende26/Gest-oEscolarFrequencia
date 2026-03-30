@@ -1,186 +1,216 @@
-/* Excel Grid System */
+/* Premium Excel Grid System */
+
+:root {
+  --cell-width: 50px;
+  --aluno-width: 240px;
+  --status-p: hsl(161, 84%, 45%);
+  --status-f: hsl(0, 84%, 60%);
+  --status-j: hsl(38, 92%, 50%);
+  
+  --cell-bg: hsl(0, 0%, 100%);
+  --cell-hover: hsla(210, 40%, 96%, 1);
+  --cell-border: hsla(210, 40%, 90%, 0.8);
+}
+
 .excel-container {
-  overflow-x: auto;
-  border: 1px solid #E5E7EB;
-  border-radius: var(--radius-sm);
+  overflow: auto;
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
   background: white;
   margin-top: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  max-height: 70vh;
+  box-shadow: var(--shadow-premium);
+  max-height: calc(100vh - 250px);
   position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
 }
 
 .excel-grid {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
-/* Base headers */
+/* Headers */
 .excel-grid th {
-  background-color: #F8FAFC;
-  color: var(--text-main);
+  background-color: hsla(210, 40%, 98%, 0.9);
+  backdrop-filter: blur(4px);
+  color: var(--text-muted);
   font-weight: 600;
-  padding: 0.8rem 0.5rem;
-  border: 1px solid #E2E8F0;
+  padding: 1rem 0.5rem;
+  border-bottom: 2.5px solid var(--cell-border);
+  border-right: 1px solid var(--cell-border);
   white-space: nowrap;
   position: sticky;
   top: 0;
-  z-index: 10;
-  box-shadow: inset 0 -1px 0 #E2E8F0;
+  z-index: 20;
 }
 
-/* Aluno Column Sticky Left */
-.aluno-col,
-.aluno-nome {
-  text-align: left;
-  position: sticky;
-  left: 0;
-  background-color: #F8FAFC;
-  z-index: 15;
-  font-weight: 500;
-  padding: 0.8rem 1.2rem !important;
-  border-right: 2px solid #CBD5E1 !important;
+.excel-grid th:first-child { 
+  z-index: 30; 
+  left: 0; 
+  border-right: 2.5px solid var(--cell-border);
 }
 
-/* Cells */
-.excel-grid td {
-  border: 1px solid #E2E8F0;
-  padding: 0.8rem 0;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-
+/* Day Columns Header */
 .dia-col {
-  min-width: 45px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.dia-col:hover {
-  background: #E2E8F0 !important;
+  min-width: var(--cell-width);
 }
 
 .dia-num {
   display: block;
-  font-size: 1.05rem;
-  line-height: 1.1;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1;
 }
 
 .dia-semana {
   display: block;
-  font-size: 0.70rem;
-  color: var(--text-muted);
+  font-size: 0.65rem;
   text-transform: uppercase;
-  margin-top: 0.2rem;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+  color: var(--text-muted);
 }
 
-/* Interactivity (Clickable Excel Cells) */
+/* Aluno Name Column */
+.aluno-col, 
+.aluno-nome {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background-color: white;
+  z-index: 10;
+  padding: 0.75rem 1.5rem !important;
+  border-right: 2.5px solid var(--cell-border) !important;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: background 0.2s;
+}
+
+tr:hover .aluno-nome {
+  background-color: var(--cell-hover);
+  color: var(--primary);
+}
+
+/* Cells Logic */
+.excel-grid td {
+  border-bottom: 1px solid var(--cell-border);
+  border-right: 1px solid var(--cell-border);
+  padding: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 48px;
+}
+
 .freq-cell {
   cursor: pointer;
-  font-weight: 600;
-  position: relative;
-}
-
-.freq-cell:hover::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  border: 2px solid var(--secondary);
-  pointer-events: none;
-  z-index: 5;
-}
-
-/* Status Colors */
-
-/* P - Presente */
-.status-P {
-  background-color: var(--success-bg) !important;
-  color: var(--success-text);
-}
-
-/* F - Falta */
-.status-F {
-  background-color: var(--danger-bg) !important;
-  color: var(--danger-text);
-}
-
-/* J - Justificada */
-.status-J {
-  background-color: var(--warning-bg) !important;
-  color: var(--warning-text);
-}
-
-/* Not interactive elements */
-.dia-feriado, .dia-reuniao, .dia-fim-semana {
-  background-color: #F1F5F9 !important;
-  color: #94A3B8;
-  pointer-events: none;
-}
-
-.dia-fim-semana {
-  opacity: 0.5;
-}
-
-/* Resumo Pct */
-.total-col {
-  width: 70px;
-  background-color: #F8FAFC;
-  position: sticky;
-  right: 0;
-  z-index: 15;
-  border-left: 2px solid #CBD5E1 !important;
-}
-
-.total-pct {
   font-weight: 700;
-  background-color: #FAFAF9;
+  user-select: none;
+  position: relative;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+}
+
+.freq-cell:hover {
+  background-color: var(--cell-hover);
+  z-index: 5;
+  box-shadow: inset 0 0 0 2px hsla(161, 84%, 39%, 0.2);
+}
+
+/* Status Highlighting */
+.status-P {
+  background-color: hsla(161, 84%, 39%, 0.1) !important;
+  color: var(--status-p) !important;
+}
+
+.status-P:hover {
+  background-color: hsla(161, 84%, 39%, 0.15) !important;
+}
+
+.status-F {
+  background-color: hsla(0, 84%, 60%, 0.1) !important;
+  color: var(--status-f) !important;
+}
+
+.status-J {
+  background-color: hsla(38, 92%, 50%, 0.1) !important;
+  color: var(--status-j) !important;
+}
+
+/* Non-business days */
+.dia-feriado, .dia-reuniao, .dia-fim-semana {
+  background-color: hsla(210, 20%, 93%, 0.5) !important;
+  color: hsla(210, 10%, 75%, 1);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+/* Totals Percent Pillar */
+.total-col, .total-pct {
   position: sticky;
   right: 0;
-  border-left: 2px solid #CBD5E1 !important;
-  z-index: 5;
+  background-color: hsl(210, 40%, 98%);
+  z-index: 10;
+  width: 80px;
+  border-left: 2.5px solid var(--cell-border) !important;
+  font-weight: 800;
 }
 
 .pct-danger {
-  color: var(--danger-text);
-  background-color: var(--danger-bg);
+  color: var(--danger);
+  background-color: hsla(0, 84%, 60%, 0.05);
 }
 
-/* Actions Ribbon Settings */
+/* Ribbons & Controls */
 .tools-ribbon {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
-  padding: 1rem 1.5rem;
-  border-radius: var(--radius-sm);
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow-sm);
-  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  gap: 2rem;
 }
 
 .ribbon-controls {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 1.25rem;
 }
 
-.tools-ribbon select {
-  padding: 0.5rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid #D1D5DB;
+.ribbon-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-sm);
 }
 
-/* Loading Skeleton */
-.loading-row td {
-  background: #F1F5F9;
-  animation: pulse 1.5s infinite;
-  color: transparent;
+.week-navigator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-sm);
 }
 
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+.week-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    min-width: 140px;
+    text-align: center;
+}
+
+/* Responsive Table */
+@media (max-width: 768px) {
+  .excel-container {
+    max-height: calc(100vh - 350px);
+  }
 }

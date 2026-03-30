@@ -89,10 +89,20 @@
 
         if (error) throw error;
         
-        // Redireciona
-        window.location.href = './frequencia.html';
+        // Buscar Perfil para Redirecionamento
+        const { data: profile } = await supabaseClient
+          .from('usuarios')
+          .select('perfil')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile && profile.perfil === 'admin') {
+          window.location.href = './dashboard.html';
+        } else {
+          window.location.href = './frequencia.html';
+        }
       } catch (err) {
-        errorMsg.textContent = 'Credenciais inválidas: ' + err.message;
+        errorMsg.textContent = 'Credenciais inválidas: ' + (err.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos' : err.message);
         errorMsg.style.display = 'block';
       }
     });

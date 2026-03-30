@@ -25,15 +25,16 @@
   <main>
     <div class="tools-ribbon">
       <div class="ribbon-controls">
-        <div class="form-group" style="margin: 0;">
-          <label>Selecione a Turma</label>
-          <select id="turmaSelect" onchange="carregarGrade()">
+        <div class="ribbon-group">
+          <label>Turma</label>
+          <select id="turmaSelect" onchange="carregarGrade()" style="border:none; font-weight:700; color:var(--primary); outline:none; background:transparent; cursor:pointer;">
             <option value="">Carregando...</option>
           </select>
         </div>
-        <div class="form-group" style="margin: 0;">
+
+        <div class="ribbon-group">
           <label>Mês</label>
-          <select id="mesSelect" onchange="carregarGrade()">
+          <select id="mesSelect" onchange="carregarGrade()" style="border:none; font-weight:700; color:var(--text-main); outline:none; background:transparent; cursor:pointer;">
             <option value="1">Janeiro</option>
             <option value="2">Fevereiro</option>
             <option value="3">Março</option>
@@ -48,20 +49,22 @@
             <option value="12">Dezembro</option>
           </select>
         </div>
-        <div class="form-group" style="margin: 0;">
-          <label>Exibição (Foco)</label>
-          <select id="semanaSelect" onchange="alterarSemana()">
-            <option value="0">Mês Inteiro (Full)</option>
-            <!-- Populado via JS -->
-          </select>
+
+        <!-- Navegador Semanal Premium -->
+        <div class="week-navigator">
+          <button class="btn-ghost" onclick="navegarSemana(-1)" title="Semana Anterior" style="padding: 0.2rem 0.5rem">◀</button>
+          <div id="weekDisplay" class="week-label">Semana atual</div>
+          <button class="btn-ghost" onclick="navegarSemana(1)" title="Próxima Semana" style="padding: 0.2rem 0.5rem">▶</button>
+          <button class="btn-ghost" onclick="toggleModoExibicao()" title="Alternar Mensal/Semanal" id="btnToggleModo" style="border-left: 1px solid var(--border-glass); margin-left: 5px; padding-left: 10px;">📅 Full</button>
         </div>
       </div>
+      
       <div>
         <button class="btn btn-primary" onclick="salvarGrade()" id="btnSave">
-          <svg style="width:16px;height:16px" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 2l-6-6h4V3h4v5h4l-6 6z"/>
+          <svg style="width:18px;height:18px" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/>
           </svg>
-          Salvar Alterações
+          Salvar Chamada
         </button>
       </div>
     </div>

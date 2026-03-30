@@ -40,6 +40,9 @@ async function carregarGrade() {
 
   container.innerHTML = `<div style="padding: 2rem; text-align: center;">Buscando dados da matriz de frequência...</div>`;
 
+  const ctx = new Date();
+  const hojeStr = ctx.toISOString().split('T')[0];
+  
   try {
     const res = await apiFetch(`/frequencias?turma_id=${turmaId}&mes=${mes}&ano=${ano}`);
     
@@ -47,18 +50,16 @@ async function carregarGrade() {
     stateBase.alunos = res.alunos || [];
     stateBase.turma_id = turmaId;
     
-    // Resetar seletor de semanas
-    stateBase.semanaAtiva = "0";
-    if (semanaSelect) {
-      semanaSelect.value = "0";
-      const totalDias = stateBase.calendario.length;
-      let optionsHtml = '<option value="0">Mês Inteiro (Full)</option>';
-      const numSemanas = Math.ceil(totalDias / 7);
-      
-      for (let i = 1; i <= numSemanas; i++) {
-        optionsHtml += `<option value="${i}">Semana ${i}</option>`;
+    // Identificar Semana Atual automaticamente se for o mês corrente
+    if (parseInt(mes) === (ctx.getMonth() + 1)) {
+      const indexHoje = stateBase.calendario.findIndex(c => c.data === hojeStr);
+      if (indexHoje !== -1) {
+        stateBase.semanaAtiva = Math.floor(indexHoje / 7) + 1;
+      } else {
+        stateBase.semanaAtiva = 1;
       }
-      semanaSelect.innerHTML = optionsHtml;
+    } else {
+      stateBase.semanaAtiva = 1;
     }
 
     if (stateBase.alunos.length === 0) {
@@ -77,16 +78,33 @@ async function carregarGrade() {
   }
 }
 
-function alterarSemana() {
-  const select = document.getElementById('semanaSelect');
-  if (select) {
-    stateBase.semanaAtiva = select.value;
-    renderGrid();
+function navegarSemana(direcao) {
+  const totalDias = stateBase.calendario.length;
+  const numSemanas = Math.ceil(totalDias / 7);
+  let novaSemana = parseInt(stateBase.semanaAtiva) + direcao;
+
+  if (novaSemana < 1) novaSemana = 1;
+  if (novaSemana > numSemanas) novaSemana = numSemanas;
+
+  stateBase.semanaAtiva = novaSemana.toString();
+  renderGrid();
+}
+
+function toggleModoExibicao() {
+  const btn = document.getElementById('btnToggleModo');
+  if (stateBase.semanaAtiva === "0") {
+    stateBase.semanaAtiva = "1";
+    btn.innerText = "📅 Full";
+  } else {
+    stateBase.semanaAtiva = "0";
+    btn.innerText = "📅 Week";
   }
+  renderGrid();
 }
 
 function renderGrid() {
   const container = document.getElementById('gridContainer');
+  const weekDisplay = document.getElementById('weekDisplay');
   const { calendario: fullCal, alunos, semanaAtiva } = stateBase;
 
   // Filtrar Calendário se for por semana
@@ -94,6 +112,14 @@ function renderGrid() {
   if (semanaAtiva !== "0") {
      const idx = parseInt(semanaAtiva) - 1;
      calendario = fullCal.slice(idx * 7, (idx + 1) * 7);
+     
+     if (weekDisplay && calendario.length > 0) {
+       const dIni = new Date(calendario[0].data + "T00:00:00").toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+       const dFim = new Date(calendario[calendario.length-1].data + "T00:00:00").toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+       weekDisplay.innerText = `${dIni} a ${dFim}`;
+     }
+  } else {
+    if (weekDisplay) weekDisplay.innerText = "Mês Completo";
   }
 
   const thead = `
