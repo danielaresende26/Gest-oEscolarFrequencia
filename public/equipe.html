@@ -95,13 +95,15 @@
       userId = user.id;
       const { data: userData } = await client.from('usuarios').select('escola_id, perfil').eq('id', user.id).single();
       
-      if (!userData || userData.perfil !== 'admin') {
+      const isMaster = userData && userData.perfil === 'super_admin';
+      
+      if (!userData || (userData.perfil !== 'admin' && !isMaster)) {
         alert("Acesso restrito a administradores.");
         window.location.href = 'frequencia.html';
         return;
       }
-      
-      escolaId = userData.escola_id;
+
+      escolaId = userData.escola_id; 
       carregarEquipe();
     });
 

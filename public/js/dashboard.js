@@ -23,14 +23,19 @@ async function carregarDashboard() {
       return;
     }
 
-    const { data: profile } = await client.from('usuarios').select('escola_id, nome').eq('id', session.user.id).single();
-    if (!profile || !profile.escola_id) {
+    const { data: profile } = await client.from('usuarios').select('escola_id, perfil, nome').eq('id', session.user.id).single();
+    
+    // MASTER (Super Admin) pode acessar
+    const isMaster = profile && profile.perfil === 'super_admin';
+
+    if (!isMaster && (!profile || !profile.escola_id)) {
        console.error("Usuário sem escola vinculada.");
        return;
     }
 
     // 3. Busca Dados da API Real
-    const data = await apiFetch(`/relatorios/dashboard?escola_id=${profile.escola_id}`);
+    const endpoint = (isMaster && !profile.escola_id) ? '/relatorios/dashboard' : `/relatorios/dashboard?escola_id=${profile.escola_id}`;
+    const data = await apiFetch(endpoint);
 
     // 4. Atualiza Cards
     containerRisco.innerText = data.alunosRisco.length;

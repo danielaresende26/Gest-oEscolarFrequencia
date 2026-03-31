@@ -116,13 +116,19 @@
         if(!user) return;
 
         const { data: userData } = await client.from('usuarios').select('escola_id, perfil').eq('id', user.id).single();
-        if (!userData || !userData.escola_id) {
+        
+        // MASTER (Super Admin) pode acessar sem escola_id
+        const isMaster = userData && userData.perfil === 'super_admin';
+
+        if (!isMaster && (!userData || !userData.escola_id)) {
             document.getElementById('relatorioContainer').innerHTML = `<div style="padding: 3rem; text-align: center;">Vincule sua conta a uma escola no Supabase primeiro.</div>`;
             return;
         }
 
         const escolaId = userData.escola_id;
-        const res = await apiFetch(`/turmas?escola_id=${escolaId}`);
+        // Se for Master e escolaId for null, podemos buscar todas ou apenas silenciar
+        const endpoint = escolaId ? `/turmas?escola_id=${escolaId}` : '/turmas';
+        const res = await apiFetch(endpoint);
         const select = document.getElementById('relatorioTurma');
         select.innerHTML = res.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
         if(res.length > 0) carregarRelatorio();

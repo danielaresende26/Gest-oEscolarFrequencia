@@ -10,7 +10,7 @@ exports.listarEscolas = async (req, res) => {
   try {
     const { data: escolas, error } = await supabase
       .from('escolas')
-      .select('*, usuarios!inner(id, nome, email)')
+      .select('*, usuarios!inner(id, nome)')
       .order('created_at', { ascending: false });
 
     if (error) throw error;

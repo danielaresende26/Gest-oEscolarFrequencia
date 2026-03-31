@@ -123,15 +123,17 @@
         // 2. Buscar Perfil e Escola
         const { data: userData } = await supabaseClient
           .from('usuarios')
-          .select('nome, escola_id')
+          .select('nome, escola_id, perfil')
           .eq('id', session.user.id)
           .single();
 
         if (userData) {
-          document.getElementById('userName').innerText = `Professor(a) ${userData.nome.split(' ')[0]}`;
+          const isMaster = userData.perfil === 'super_admin';
+          document.getElementById('userName').innerText = isMaster ? `Master ${userData.nome.split(' ')[0]}` : `Professor(a) ${userData.nome.split(' ')[0]}`;
           
-          // 3. Buscar Turmas da Escola
-          const turmas = await apiFetch(`/turmas?escola_id=${userData.escola_id}`);
+          // 3. Buscar Turmas
+          const endpoint = (isMaster && !userData.escola_id) ? '/turmas' : `/turmas?escola_id=${userData.escola_id}`;
+          const turmas = await apiFetch(endpoint);
           
           if (turmas.length > 0) {
             document.getElementById('turmaSelect').innerHTML = turmas.map(t => 
@@ -141,11 +143,12 @@
             // 4. Carregar Grade da Primeira Turma
             carregarGrade();
           } else {
-            document.getElementById('turmaSelect').innerHTML = '<option value="">Crie uma turma na Gestão</option>';
+            const mensagemMaster = isMaster ? "Nenhuma escola ou turma cadastrada no sistema. Vá ao Painel Master." : "Crie uma turma na Gestão";
+            document.getElementById('turmaSelect').innerHTML = `<option value="">${isMaster ? 'Sem dados' : 'Crie uma turma'}</option>`;
             document.getElementById('gridContainer').innerHTML = `
               <div class="glass-panel" style="padding: 2rem; text-align: center;">
                 <h3>Nenhuma turma encontrada.</h3>
-                <p>Acesse a aba ⚙️ Gestão no topo para cadastrar sua primeira turma.</p>
+                <p>${mensagemMaster}</p>
               </div>`;
           }
         }
