@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel do Mestre - SaaS Gestão Escolar</title>
+  <!-- v2.5 - Atualização de Recursos Master: 30/03/2026 22:05 -->
   <link rel="stylesheet" href="./css/main.css">
   <link rel="stylesheet" href="./css/excel.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -106,7 +107,7 @@
           <div style="display: flex; gap: 1rem; align-items: center;">
             <div class="form-group" style="margin:0;">
               <small class="text-muted">Plano</small><br>
-              <select onchange="atualizarEscola('${esc.id}', {plano: this.value})">
+              <select onchange="handlePlanoChange('${esc.id}', this.value)">
                 <option value="basico" ${esc.plano === 'basico' ? 'selected' : ''}>Básico</option>
                 <option value="profissional" ${esc.plano === 'profissional' ? 'selected' : ''}>Profissional</option>
                 <option value="premium" ${esc.plano === 'premium' ? 'selected' : ''}>Premium</option>
@@ -127,8 +128,34 @@
               </button>
             </div>
           </div>
+
+          <!-- Novos Toggles de Recursos Premium -->
+          <div style="display: flex; gap: 1.5rem; padding: 0.8rem; background: rgba(139, 92, 246, 0.05); border-radius: 8px; width: 100%; border-top: 1px dashed #EEE;">
+             <div style="display:flex; align-items:center; gap:0.5rem;">
+               <input type="checkbox" ${esc.has_analytics ? 'checked' : ''} onchange="atualizarEscola('${esc.id}', {has_analytics: this.checked})">
+               <span style="font-size:0.85rem;">📊 Analytics</span>
+             </div>
+             <div style="display:flex; align-items:center; gap:0.5rem;">
+               <input type="checkbox" ${esc.has_excel ? 'checked' : ''} onchange="atualizarEscola('${esc.id}', {has_excel: this.checked})">
+               <span style="font-size:0.85rem;">📉 Excel</span>
+             </div>
+             <div style="display:flex; align-items:center; gap:0.5rem;">
+               <input type="checkbox" ${esc.has_whatsapp ? 'checked' : ''} onchange="atualizarEscola('${esc.id}', {has_whatsapp: this.checked})">
+               <span style="font-size:0.85rem;">💬 WhatsApp</span>
+             </div>
+          </div>
         </div>
       `).join('');
+    }
+
+    async function handlePlanoChange(id, plano) {
+      const dados = { plano };
+      if (plano === 'premium') {
+        dados.has_whatsapp = true;
+        dados.has_excel = true;
+        dados.has_analytics = true;
+      }
+      await atualizarEscola(id, dados);
     }
 
     async function atualizarEscola(id, dados) {

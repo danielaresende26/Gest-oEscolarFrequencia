@@ -217,6 +217,14 @@ function fecharToast() {
 
 function enviarAlertaWhatsapp(nomeCompleto, nomeReduzido) {
   fecharToast();
+
+  // Verificar Permissão Premium
+  try {
+    const perms = JSON.parse(sessionStorage.getItem('escola_perms') || '{}');
+    if (!perms.has_whatsapp) {
+      return mostrarAvisoPremium('💬 Mensageria Automática WhatsApp', 'Envie alertas de falta instantâneos e mantenha os responsáveis engajados com a escola.');
+    }
+  } catch(e) {}
   
   const escolaNome = "Minha Escola Modelo";
   const telefoneSecretaria = "(11) 9999-9999";

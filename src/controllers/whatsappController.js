@@ -5,7 +5,18 @@ exports.dispararManual = async (req, res) => {
   try {
     const { aluno_id, mensagem } = req.body;
     
-    // Obter numero do aluno
+    // Obter numero do aluno e permissão da escola
+    const { data: aluno, error: alunoError } = await supabase
+      .from('alunos')
+      .select('escola_id, escola:escolas(has_whatsapp)')
+      .eq('id', aluno_id)
+      .single();
+
+    if (alunoError || !aluno) throw new Error('Aluno não encontrado.');
+    if (!aluno.escola?.has_whatsapp) {
+      return res.status(403).json({ error: 'Recurso Premium', details: 'O envio de WhatsApp não está habilitado para o seu plano.' });
+    }
+
     const { data: contatos, error: contatoError } = await supabase
       .from('contatos')
       .select('numero')

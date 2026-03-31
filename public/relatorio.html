@@ -70,6 +70,14 @@
      * Gera e faz o download de uma planilha Excel com base no relatório atual.
      */
     function exportarExcel() {
+      // Verificar Permissão Premium
+      try {
+        const perms = JSON.parse(sessionStorage.getItem('escola_perms') || '{}');
+        if (!perms.has_excel) {
+          return mostrarAvisoPremium('📉 Módulo de Relatórios em Excel', 'Exporte dados formatados para Excel e ganhe agilidade na sua análise.');
+        }
+      } catch(e) {}
+
       if (!ultimoDadosRelatorio) return alert("Gere um relatório primeiro!");
 
       const { calendario, matriz } = ultimoDadosRelatorio;

@@ -22,7 +22,7 @@ exports.listarEscolas = async (req, res) => {
 
 // Criar nova escola cliente
 exports.criarEscola = async (req, res) => {
-  const { nome, plano, max_professores, max_turmas } = req.body;
+  const { nome, plano, max_professores, max_turmas, has_whatsapp, has_excel, has_analytics } = req.body;
   try {
     const { data, error } = await supabase
       .from('escolas')
@@ -31,6 +31,9 @@ exports.criarEscola = async (req, res) => {
         plano: plano || 'profissional', 
         max_professores: max_professores || 10,
         max_turmas: max_turmas || 20,
+        has_whatsapp: has_whatsapp || false,
+        has_excel: has_excel || false,
+        has_analytics: has_analytics || false,
         ativo: true 
       }])
       .select();

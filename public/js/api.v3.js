@@ -76,6 +76,10 @@ async function initAdminNav(client) {
     if (userData) {
       console.log(`👤 Usuário: ${userData.nome} | Perfil: ${userData.perfil}`);
       
+      // BUSCAR PERMISSÕES DA ESCOLA (NOVO)
+      let { data: escolaPerms } = await client.from('escolas').select('has_whatsapp, has_excel, has_analytics').eq('id', userData.escola_id).single();
+      sessionStorage.setItem('escola_perms', JSON.stringify(escolaPerms || {}));
+
       const userNameEl = document.getElementById('userName');
       if (userNameEl) userNameEl.innerText = userData.nome;
 
@@ -95,7 +99,7 @@ async function initAdminNav(client) {
           superLink.href = 'super.html';
           superLink.id = 'navSuper';
           superLink.className = 'btn-ghost';
-          superLink.style.color = '#8B5CF6'; // Cor Roxa exclusiva para o Master
+          superLink.style.color = '#8B5CF6'; 
           superLink.innerHTML = '🛡️ Master';
           if (!document.getElementById('navSuper')) navLinks.prepend(superLink);
         }
@@ -103,6 +107,12 @@ async function initAdminNav(client) {
         // Link Dashboard (Para Admin e Super Admin)
         if (navDash) {
           navDash.style.display = 'inline-flex';
+          navDash.onclick = (e) => {
+             if (userData.perfil !== 'super_admin' && !escolaPerms?.has_analytics) {
+                e.preventDefault();
+                mostrarAvisoPremium('📊 Analytics de Gestão', 'Visualize alunos em risco e estatísticas críticas da sua unidade.');
+             }
+          };
         } else if (navLinks) {
           const dashLink = document.createElement('a');
           dashLink.href = 'dashboard.html';
@@ -110,6 +120,12 @@ async function initAdminNav(client) {
           dashLink.className = 'btn-ghost';
           dashLink.title = 'Painel Analítico de Gestão';
           dashLink.innerHTML = '📊 Dashboard';
+          dashLink.onclick = (e) => {
+             if (userData.perfil !== 'super_admin' && !escolaPerms?.has_analytics) {
+                e.preventDefault();
+                mostrarAvisoPremium('📊 Analytics de Gestão', 'Visualize alunos em risco e estatísticas críticas da sua unidade.');
+             }
+          };
           navLinks.prepend(dashLink);
         }
       } else {
@@ -122,6 +138,38 @@ async function initAdminNav(client) {
   } catch (err) {
     console.error("💥 Erro fatal no initAdminNav:", err);
   }
+}
+
+/**
+ * Exibe o Modal de Venda para Recursos Bloqueados
+ */
+window.mostrarAvisoPremium = function(modulo, beneficio) {
+  const modal = document.createElement('div');
+  modal.style = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+    z-index: 10000; font-family: 'Inter', sans-serif;
+  `;
+  
+  modal.innerHTML = `
+    <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
+      <h2 style="margin-bottom: 0.5rem; color: #111;">${modulo}</h2>
+      <p style="color: #666; margin-bottom: 1.5rem; line-height: 1.5;">Este recurso é exclusivo do <strong>Plano Profissional</strong>. ${beneficio}</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+        <button onclick="window.open('https://wa.me/SEU_NUMERO_AQUI', '_blank')" 
+                style="background: #8B5CF6; color: white; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+          Quero fazer o Upgrade! 💎
+        </button>
+        <button onclick="this.closest('div').parentElement.parentElement.remove()" 
+                style="background: none; border: none; color: #999; cursor: pointer; font-size: 0.9rem;">
+          Talvez depois
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 // Marca de versão para debugging de Cache da Vercel
