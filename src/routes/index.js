@@ -13,6 +13,12 @@ const calendarioController = require('../controllers/calendarioController');
 const relatorioController = require('../controllers/relatorioController');
 const whatsappController = require('../controllers/whatsappController');
 const usuarioController = require('../controllers/usuarioController');
+const superController = require('../controllers/superController');
+
+// --- SUPER ADMIN (Gestão Global SaaS) ---
+router.get('/super/escolas', superController.listarEscolas);
+router.post('/super/escolas', superController.criarEscola);
+router.patch('/super/escolas/:id', superController.atualizarEscola);
 
 // --- Turmas ---
 router.post('/turmas', turmaController.criar);

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Mestre - SaaS Gestão Escolar</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/excel.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --master-color: #8B5CF6; }
+    .btn-master { background: var(--master-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .btn-master:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .badge-status { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .status-ativo { background: #DCFCE7; color: #166534; }
+    .status-suspenso { background: #FEE2E2; color: #991B1B; }
+    .school-card { transition: 0.3s; }
+    .school-card:hover { border-color: var(--master-color); }
+    select, input { padding: 0.3rem; border: 1px solid #DDD; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-light">
+
+  <header style="border-bottom: 2px solid var(--master-color);">
+    <div class="brand">
+       <span style="color: var(--master-color);">🛡️</span> Super Admin
+    </div>
+    <div class="nav-links">
+      <a href="dashboard.html" class="btn-ghost">📊 Analytics Global</a>
+      <a href="frequencia.html" class="btn-ghost">📅 Voltar ao Sistema</a>
+      <span id="userName" class="user-info">Master</span>
+      <button onclick="logout()" class="btn-outline">Sair</button>
+    </div>
+  </header>
+
+  <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    
+    <div class="page-header" style="margin-bottom: 2rem;">
+      <h1>Gestão de Escolas Clientes</h1>
+      <p class="text-muted">Gerencie planos, limites e pagamentos das unidades do sistema.</p>
+    </div>
+
+    <!-- Adicionar Nova Escola -->
+    <section class="card" style="margin-bottom: 2rem;">
+      <h3>➕ Cadastrar Nova Escola</h3>
+      <form id="formNovaEscola" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+        <input type="text" id="escolaNome" placeholder="Nome da Escola / Unidade" required style="flex:1; min-width: 250px;">
+        <select id="escolaPlano">
+          <option value="basico">Plano Básico</option>
+          <option value="profissional" selected>Plano Profissional</option>
+          <option value="premium">Plano Premium</option>
+        </select>
+        <button type="submit" class="btn-master">Criar Unidade</button>
+      </form>
+    </section>
+
+    <!-- Lista de Escolas -->
+    <div id="listaEscolas" class="grid-container" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+      <div class="card" style="text-align:center; padding: 3rem;">
+        Carregando ecossistema...
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0/dist/umd/supabase.js"></script>
+  <script src="./js/api.v3.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.initSupabase();
+      carregarEscolas();
+    });
+
+    async function carregarEscolas() {
+      const container = document.getElementById('listaEscolas');
+      try {
+        const escolas = await apiFetch('/super/escolas');
+        renderizarEscolas(escolas);
+      } catch (e) {
+        container.innerHTML = `<div class="card" style="color:red;">Erro ao carregar escolas: ${e.message}</div>`;
+      }
+    }
+
+    function renderizarEscolas(escolas) {
+      const container = document.getElementById('listaEscolas');
+      
+      if (escolas.length === 0) {
+        container.innerHTML = `<div class="card" style="text-align:center; padding:3rem;">Nenhuma escola cadastrada ainda.</div>`;
+        return;
+      }
+
+      container.innerHTML = escolas.map(esc => `
+        <div class="card school-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap: 0.5rem;">
+               <h3 style="margin:0;">${esc.nome}</h3>
+               <span class="badge-status ${esc.ativo ? 'status-ativo' : 'status-suspenso'}">
+                 ${esc.ativo ? 'Ativa' : 'Suspensa'}
+               </span>
+            </div>
+            <p class="text-muted" style="margin: 0.2rem 0; font-size:0.85rem;">
+              ID: <code>${esc.id}</code> | Criada em: ${new Date(esc.created_at).toLocaleDateString()}
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div class="form-group" style="margin:0;">
+              <small class="text-muted">Plano</small><br>
+              <select onchange="atualizarEscola('${esc.id}', {plano: this.value})">
+                <option value="basico" ${esc.plano === 'basico' ? 'selected' : ''}>Básico</option>
+                <option value="profissional" ${esc.plano === 'profissional' ? 'selected' : ''}>Profissional</option>
+                <option value="premium" ${esc.plano === 'premium' ? 'selected' : ''}>Premium</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <small class="text-muted">Max Profs</small><br>
+              <input type="number" value="${esc.max_professores}" style="width: 60px;" 
+                     onchange="atualizarEscola('${esc.id}', {max_professores: parseInt(this.value)})">
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <small class="text-muted">Acesso</small><br>
+              <button onclick="atualizarEscola('${esc.id}', {ativo: ${!esc.ativo}})" 
+                      class="btn-outline" style="border-color: ${esc.ativo ? '#EF4444' : '#10B981'}; color: ${esc.ativo ? '#EF4444' : '#10B981'};">
+                ${esc.ativo ? 'Suspender' : 'Ativar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function atualizarEscola(id, dados) {
+      try {
+        await apiFetch(`/super/escolas/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(dados)
+        });
+        carregarEscolas();
+      } catch (e) {
+        alert("Erro ao atualizar escola: " + e.message);
+      }
+    }
+
+    document.getElementById('formNovaEscola').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('escolaNome').value;
+      const plano = document.getElementById('escolaPlano').value;
+
+      try {
+        await apiFetch('/super/escolas', {
+          method: 'POST',
+          body: JSON.stringify({ nome, plano })
+        });
+        document.getElementById('escolaNome').value = '';
+        carregarEscolas();
+      } catch (e) {
+        alert("Erro ao criar escola: " + e.message);
+      }
+    });
+
+    function logout() {
+      supabaseClient.auth.signOut().then(() => window.location.href = 'index.html');
+    }
+  </script>
+</body>
+</html>

@@ -33,7 +33,39 @@ exports.criarMembroEquipe = async (req, res) => {
        return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
     }
 
-    // 1. Criar usuário no Supabase Auth (Admin API)
+    // 1. Verificar Limites do Plano da Escola
+    const { data: escola, error: escolaErr } = await supabase
+      .from('escolas')
+      .select('plano, max_professores, ativo')
+      .eq('id', escola_id)
+      .single();
+
+    if (escolaErr) throw new Error("Erro ao validar escola: " + escolaErr.message);
+
+    // Verificação de suspensão (apenas aviso, mas bloqueia novos cadastros)
+    if (!escola.ativo) {
+      return res.status(403).json({ 
+        error: "Assinatura Expirada", 
+        message: "Esta unidade está com o acesso limitado. Entre em contato com o suporte para regularizar." 
+      });
+    }
+
+    // Contar usuários atuais da escola
+    const { count: totalAtual, error: countErr } = await supabase
+      .from('usuarios')
+      .select('id', { count: 'exact', head: true })
+      .eq('escola_id', escola_id);
+
+    if (countErr) throw countErr;
+
+    if (totalAtual >= (escola.max_professores || 0)) {
+      return res.status(403).json({ 
+        error: "Limite atingido", 
+        message: `Seu plano ${escola.plano} permite apenas ${escola.max_professores} membros. Faça upgrade para continuar.` 
+      });
+    }
+
+    // 2. Criar usuário no Supabase Auth (Admin API)
     // Isso cria a conta sem precisar confirmar e-mail se o Admin API estiver habilitado
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: email,

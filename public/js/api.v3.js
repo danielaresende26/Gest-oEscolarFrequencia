@@ -83,16 +83,27 @@ async function initAdminNav(client) {
       const navDash = document.getElementById('navDash');
       const navLinks = document.querySelector('.nav-links');
 
-      if (userData.perfil === 'admin') {
-        console.log("👑 Perfil ADMIN confirmado.");
+      if (userData.perfil === 'super_admin' || userData.perfil === 'admin') {
+        console.log(`👑 Perfil ${userData.perfil.toUpperCase()} confirmado.`);
         
-        if (navEquipe) navEquipe.style.display = 'inline-flex';
+        // Mostrar link Equipe se existir
+        if (userData.perfil === 'admin' && navEquipe) navEquipe.style.display = 'inline-flex';
         
-        // Se o link do Dashboard já existe no HTML (recomendado), apenas mostra
+        // Link Super Painel (Apenas para Super Admin)
+        if (userData.perfil === 'super_admin' && navLinks) {
+          const superLink = document.getElementById('navSuper') || document.createElement('a');
+          superLink.href = 'super.html';
+          superLink.id = 'navSuper';
+          superLink.className = 'btn-ghost';
+          superLink.style.color = '#8B5CF6'; // Cor Roxa exclusiva para o Master
+          superLink.innerHTML = '🛡️ Master';
+          if (!document.getElementById('navSuper')) navLinks.prepend(superLink);
+        }
+
+        // Link Dashboard (Para Admin e Super Admin)
         if (navDash) {
           navDash.style.display = 'inline-flex';
         } else if (navLinks) {
-          // Fallback: Injetar se não existir no HTML
           const dashLink = document.createElement('a');
           dashLink.href = 'dashboard.html';
           dashLink.id = 'navDash';
@@ -105,6 +116,7 @@ async function initAdminNav(client) {
         console.log("🚫 Perfil PROFESSOR. Mantendo acessos admin ocultos.");
         if (navEquipe) navEquipe.style.display = 'none';
         if (navDash) navDash.style.display = 'none';
+        if (document.getElementById('navSuper')) document.getElementById('navSuper').style.display = 'none';
       }
     }
   } catch (err) {
