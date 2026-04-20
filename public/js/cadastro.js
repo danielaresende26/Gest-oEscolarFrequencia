@@ -1,5 +1,7 @@
 let userProfile = null;
 let userId = null;
+let escolaId = null;
+let turmasCarregadas = [];
 
 // Ao carregar a página
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11,14 +13,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!user) return window.location.href = 'index.html';
     
     userId = user.id;
-    const { data: userData } = await client.from('usuarios').select('escola_id, perfil').eq('id', user.id).single();
+    const { data: userData } = await client.from('usuarios').select('escola_id, perfil').eq('id', user.id).maybeSingle();
     
     // MASTER (Super Admin) pode acessar sem escola_id
     const isMaster = userData && userData.perfil === 'super_admin';
     
     if (!isMaster && (!userData || !userData.escola_id)) {
-        alert("Sua conta ainda não está vinculada a nenhuma escola! Configure no Supabase.");
-        return;
+        return window.mostrarModalVinculoEscola();
     }
     escolaId = userData.escola_id; 
     userProfile = userData.perfil;

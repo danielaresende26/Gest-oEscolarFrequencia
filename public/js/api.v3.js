@@ -31,7 +31,7 @@ window.initSupabase = async function() {
     console.log("✅ Supabase Client inicializado.");
     
     // Auto-check Admin Menu
-    initAdminNav(supabaseClient);
+    await initAdminNav(supabaseClient);
 
     return supabaseClient;
   } catch(e) {
@@ -51,7 +51,7 @@ async function initAdminNav(client) {
       return;
     }
 
-    let { data: userData, error: fetchError } = await client.from('usuarios').select('perfil, nome, escola_id').eq('id', user.id).single();
+    let { data: userData, error: fetchError } = await client.from('usuarios').select('perfil, nome, escola_id').eq('id', user.id).maybeSingle();
     
     // CASO DE EMERGÊNCIA: Se o usuário logou no Auth mas não tem entrada na tabela 'usuarios'
     // Provavelmente é o dono da escola/primeiro acesso. Vamos auto-vincular como admin.
@@ -77,7 +77,7 @@ async function initAdminNav(client) {
       console.log(`👤 Usuário: ${userData.nome} | Perfil: ${userData.perfil}`);
       
       // BUSCAR PERMISSÕES DA ESCOLA (NOVO)
-      let { data: escolaPerms } = await client.from('escolas').select('has_whatsapp, has_excel, has_analytics').eq('id', userData.escola_id).single();
+      let { data: escolaPerms } = await client.from('escolas').select('has_whatsapp, has_excel, has_analytics').eq('id', userData.escola_id).maybeSingle();
       sessionStorage.setItem('escola_perms', JSON.stringify(escolaPerms || {}));
 
       const userNameEl = document.getElementById('userName');
@@ -138,6 +138,131 @@ async function initAdminNav(client) {
   } catch (err) {
     console.error("💥 Erro fatal no initAdminNav:", err);
   }
+}
+
+/**
+ * Interface de Onboarding: Permite ao Admin vincular-se ou criar uma escola.
+ */
+window.mostrarModalVinculoEscola = async function() {
+  const container = document.createElement('div');
+  container.id = 'onboardingModal';
+  container.style = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10001; font-family: 'Inter', sans-serif;
+  `;
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  container.innerHTML = `
+    <div class="glass-panel" style="background: white; padding: 2.5rem; border-radius: 16px; max-width: 450px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+      <div style="font-size: 3.5rem; margin-bottom: 1rem;">🏫</div>
+      <h2 style="margin-bottom: 0.5rem; color: #1e293b; font-weight: 800;">Quase lá!</h2>
+      <p style="color: #64748b; margin-bottom: 2rem; line-height: 1.6;">Para começar a cadastrar turmas, sua conta precisa estar vinculada a uma unidade escolar.</p>
+      
+      <div id="onboardingStep1" style="display: flex; flex-direction: column; gap: 1rem;">
+        <button id="btnCriarPrimeira" class="btn-primary" style="padding: 1rem; font-weight: 700; font-size: 1rem; background: #8B5CF6;">
+          ✨ Criar Minha Unidade Escolar
+        </button>
+        <div style="display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0;">
+          <hr style="flex:1; border: 0; border-top: 1px solid #e2e8f0;">
+          <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;">OU</span>
+          <hr style="flex:1; border: 0; border-top: 1px solid #e2e8f0;">
+        </div>
+        <button id="btnBuscarExistente" class="btn-outline" style="padding: 0.8rem; font-weight: 600;">
+          🔍 Buscar Escola Existente
+        </button>
+      </div>
+
+      <div id="onboardingStepCreate" style="display: none; flex-direction: column; gap: 1rem;">
+        <input type="text" id="novaEscolaNome" placeholder="Ex: Escola Estadual Alfredo Roberto" 
+               style="padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 8px; width: 100%; outline: none;" />
+        <button id="btnConfirmarCriacao" class="btn-primary" style="padding: 0.8rem; background: #10B981;">Confirmar e Iniciar</button>
+        <button onclick="document.getElementById('onboardingStepCreate').style.display='none'; document.getElementById('onboardingStep1').style.display='flex';" 
+                style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.9rem;">Voltar</button>
+      </div>
+
+      <div id="onboardingStepSelect" style="display: none; flex-direction: column; gap: 1rem;">
+        <select id="selectEscolaExistente" style="padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 8px; width: 100%;"></select>
+        <button id="btnConfirmarVinculo" class="btn-primary" style="padding: 0.8rem;">Vincular-me agora</button>
+        <button onclick="document.getElementById('onboardingStepSelect').style.display='none'; document.getElementById('onboardingStep1').style.display='flex';" 
+                style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.9rem;">Voltar</button>
+      </div>
+
+      <div id="onboardingStatus" style="margin-top: 1.5rem; display: none; font-size: 0.9rem; color: #8B5CF6; font-weight: 600;">
+        <span class="spinner"></span> Processando configuração...
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  // LOGICA: CRIAR NOVA
+  document.getElementById('btnCriarPrimeira').onclick = () => {
+    document.getElementById('onboardingStep1').style.display = 'none';
+    document.getElementById('onboardingStepCreate').style.display = 'flex';
+  };
+
+  document.getElementById('btnConfirmarCriacao').onclick = async () => {
+    const nome = document.getElementById('novaEscolaNome').value.trim();
+    if (!nome) return alert("Por favor, digite o nome da escola.");
+    
+    document.getElementById('onboardingStatus').style.display = 'block';
+    
+    try {
+      // 1. Criar a Escola no Banco
+      const escola = await apiFetch('/super/escolas', { method: 'POST', body: JSON.stringify({ nome, plano: 'profissional' }) });
+      
+      // 2. Vincular o Usuário logado a esta escola
+      // Nota: Requer política de RLS para update na tabela usuarios
+      const { error } = await supabaseClient.from('usuarios').update({ escola_id: escola.id }).eq('id', user.id);
+      
+      if (error) throw error;
+
+      window.location.reload(); // Recarrega para aplicar o novo perfil
+    } catch (e) {
+      alert("Erro ao configurar: " + e.message);
+      document.getElementById('onboardingStatus').style.display = 'none';
+    }
+  };
+
+  // LOGICA: BUSCAR EXISTENTE
+  document.getElementById('btnBuscarExistente').onclick = async () => {
+    const btn = document.getElementById('btnBuscarExistente');
+    btn.innerText = "Buscando...";
+    try {
+      const escolas = await apiFetch('/super/escolas'); // Requer permissão de leitura
+      if (escolas.length === 0) {
+        alert("Nenhuma escola cadastrada no sistema. Crie a primeira!");
+        btn.innerText = "🔍 Buscar Escola Existente";
+        return;
+      }
+      
+      const select = document.getElementById('selectEscolaExistente');
+      select.innerHTML = escolas.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+      
+      document.getElementById('onboardingStep1').style.display = 'none';
+      document.getElementById('onboardingStepSelect').style.display = 'flex';
+    } catch (e) {
+      alert("Erro ao buscar escolas: " + e.message);
+    } finally {
+      btn.innerText = "🔍 Buscar Escola Existente";
+    }
+  };
+
+  document.getElementById('btnConfirmarVinculo').onclick = async () => {
+    const escolaId = document.getElementById('selectEscolaExistente').value;
+    document.getElementById('onboardingStatus').style.display = 'block';
+    try {
+      const { error } = await supabaseClient.from('usuarios').update({ escola_id: escolaId }).eq('id', user.id);
+      if (error) throw error;
+      window.location.reload();
+    } catch (e) {
+      alert("Erro ao vincular: " + e.message);
+      document.getElementById('onboardingStatus').style.display = 'none';
+    }
+  };
 }
 
 /**
